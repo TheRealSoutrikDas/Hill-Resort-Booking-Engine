@@ -1,0 +1,25 @@
+# CI stub. Real steps arrive with the code:
+#   backend: ruff lint and pytest against a Postgres service container (stage 1, step 2)
+#   frontend: lint and next build (stage 6)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Backend lint and tests not configured yet."
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Frontend lint and build not configured yet."
