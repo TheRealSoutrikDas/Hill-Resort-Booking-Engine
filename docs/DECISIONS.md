@@ -203,3 +203,12 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Known limits, accepted for a simulation: the mock's key memory is per process; a mock timeout means "not charged" (A-62).
 - Test evidence: removing the expiry check, the guest-details check, the refund after a failed confirmation, or the same-key lookup each makes tests fail. Ten parallel clicks with one key charge once and create one booking.
 
+## D-32 Web layer: app factory, one error format, safe structured logs
+
+- App: `create_app(settings, session_factory)` in `app/main.py`, run with `uvicorn app.main:create_app --factory`. Tests build their own app with test settings; nothing connects to a database at import time.
+- Errors: one JSON shape for every failure. Domain errors map to fixed statuses in one table (`app/api/errors.py`). Validation errors keep FastAPI's field locations but never echo submitted values. Unexpected errors become a generic 500 inside the request middleware, so the response and the log line share the request id.
+- Logs: JSON lines on stdout. The access line has the route template, not the real path or query string. Only reviewed fields are written; anything else passed to a log call is dropped. Errors log the exception type and code locations but not the message, because database errors can quote values such as emails. HTTP client libraries are kept at WARNING because they log full URLs. The request id is stamped on each record when it is created.
+- Requests: one transaction per request via the `DbSession` dependency; `SessionFactory` for code that manages its own transactions.
+- Dependencies (A-24, versions at least two weeks old): `fastapi` 0.162.0 and `uvicorn` 0.54.0 (plain, without the `[standard]` extras). Dev only: `httpx2` 2.16.0 for FastAPI's test client. The approved plan said `httpx`, but Starlette 1.10 deprecates using `httpx` in its test client in favour of `httpx2`; `httpx2` was checked in a clean environment before adopting it.
+- Rejected: a logging library such as structlog (the standard library plus a small formatter is enough and easy to review), and Starlette's default 500 page (it would not carry the request id or the error format).
+

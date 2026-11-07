@@ -5,11 +5,11 @@ In production the hosting provider sets real environment variables and no .env f
 """
 
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 ENV_FILES = ("../.env", ".env")
 
@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     database_url: str
     business_timezone: str = "Asia/Kolkata"
     log_level: str = "INFO"
+    # Browser origins allowed to call the API with credentials (A-68), comma-separated
+    # in the environment, for example "http://localhost:3000,https://resort.example.com".
+    cors_origins: Annotated[list[str], NoDecode] = []
 
     # Booking rules (A-25, A-38, A-39, A-41).
     # Check-in may be any day from today up to booking_horizon_days - 1 days ahead,
@@ -65,6 +68,13 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_database_url(cls, value: str) -> str:
         return normalize_database_url(value)
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [origin.strip().rstrip("/") for origin in value.split(",") if origin.strip()]
+        return value
 
     @field_validator("business_timezone")
     @classmethod

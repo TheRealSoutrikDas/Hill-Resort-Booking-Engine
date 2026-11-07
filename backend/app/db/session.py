@@ -18,7 +18,9 @@ def create_db_engine(url: str) -> Engine:
         pool_pre_ping=True,
         # Timestamps are stored as timestamptz; a fixed session timezone keeps
         # what the database returns independent of server settings.
-        connect_args={"options": "-c timezone=UTC"},
+        # connect_timeout: an unreachable database fails in seconds (for /health) instead
+        # of hanging a request.
+        connect_args={"options": "-c timezone=UTC", "connect_timeout": 5},
     )
 
 

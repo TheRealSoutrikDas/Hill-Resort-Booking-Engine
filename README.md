@@ -56,6 +56,18 @@ The test database is created only on the first start of an empty volume. If you
 started Postgres before this existed, reset it with `docker compose down -v`
 (this deletes local data).
 
+## Run the API
+
+From `backend/`, with Postgres running and migrations applied:
+
+```bash
+uvicorn app.main:create_app --factory --reload   # http://localhost:8000
+curl localhost:8000/health                        # {"status":"ok","database":"ok"}
+```
+
+Interactive API docs are at `http://localhost:8000/docs`. Logs are JSON lines on
+stdout and never contain personal data.
+
 ## Seed data
 
 Run from `backend/` after `alembic upgrade head`:

@@ -3,7 +3,8 @@
 FastAPI app, layered as routes, services, database.
 
 ```
-app/api/            HTTP routes (thin: validate, call a service, shape the response)
+app/main.py         create_app: middleware (request id, access log, last-resort 500), CORS, routers
+app/api/            HTTP routes (thin: validate, call a service, shape the response), deps, errors
 app/services/       Business logic, testable without HTTP: pricing, dates, availability
                     (stock and row locks), rates, promos, quotes, holds, bookings,
                     checkout and payments/ (gateway adapter and mock); later the enquiry pipeline
