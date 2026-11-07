@@ -212,3 +212,14 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Dependencies (A-24, versions at least two weeks old): `fastapi` 0.162.0 and `uvicorn` 0.54.0 (plain, without the `[standard]` extras). Dev only: `httpx2` 2.16.0 for FastAPI's test client. The approved plan said `httpx`, but Starlette 1.10 deprecates using `httpx` in its test client in favour of `httpx2`; `httpx2` was checked in a clean environment before adopting it.
 - Rejected: a logging library such as structlog (the standard library plus a small formatter is enough and easy to review), and Starlette's default 500 page (it would not carry the request id or the error format).
 
+## D-33 Auth: database sessions, an HttpOnly cookie, three CSRF layers, one role dependency
+
+- Sessions: a random 32-byte token in the cookie; the `sessions` table stores only its SHA-256 hash, so a copy of the table does not hand out live sessions. A new session at every login (no session fixation); logout deletes the row, so a stolen cookie stops working at once. Expired sessions are ignored lazily, like holds.
+- Rejected: JWTs (cannot be revoked at logout without extra machinery, and need signing keys) and an auth framework (more to explain than the ~150 lines here).
+- Passwords: argon2id with the library's recommended defaults; length rules only. An unknown email still costs one verification against a dummy hash, so response time does not reveal which emails have accounts.
+- CSRF: SameSite=Lax; an Origin check on state-changing requests (through the Next.js proxy the Origin is the site's own, listed in `CORS_ORIGINS`); and a per-session token sent in `X-CSRF-Token`, compared in constant time. Login and sign-up have no session yet, so the first two layers cover them.
+- Roles: one dependency, `require_user(role, team, gm)`, with ready-made `CurrentUser`, `GuestUser`, `StaffUser`, `GmUser`. Sign-up's request model forbids extra fields, so no request can set a role, team or GM flag.
+- Tests use argon2 with minimal cost parameters (same algorithm) because the production defaults take about 170 ms per hash; production is unchanged.
+- Test evidence: removing the CSRF check, the dummy verification, the extra-field ban, the session rotation, the Origin check, the token hashing or the team check each makes tests fail.
+- Dependency: `argon2-cffi` 25.1.0.
+

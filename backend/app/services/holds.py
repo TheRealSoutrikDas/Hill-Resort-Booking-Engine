@@ -11,7 +11,6 @@ Functions take a Session and never commit: the caller commits, which also releas
 stock locks taken by `create_hold`.
 """
 
-import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
@@ -26,6 +25,14 @@ from app.services.errors import HoldNotActive, HoldNotFound, InvalidBookingReque
 from app.services.pricing import StayPrice
 from app.services.promos import reserve_use
 from app.services.quotes import HoldLineRequest, HoldRequest, HoldRules, quote_stay
+from app.services.validation import (
+    is_valid_email,
+    is_valid_name,
+    is_valid_phone,
+    normalize_email,
+    normalize_name,
+    normalize_phone,
+)
 
 # The request and rules types live with the quote; re-exported for callers of holds.
 __all__ = [
@@ -149,9 +156,6 @@ def require_active(hold: Hold, now: datetime) -> None:
 
 # ---------- guest details ----------
 
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-_PHONE_RE = re.compile(r"^\+?[0-9][0-9 ]{6,18}[0-9]$")
-
 
 def set_guest_details(
     session: Session,
@@ -165,12 +169,12 @@ def set_guest_details(
 ) -> Hold:
     """Booking step 2: who is staying. Prefilled from the account by the frontend, but the
     guest may name someone else, for example when booking for family (A-43)."""
-    name, email, phone = name.strip(), email.strip().lower(), " ".join(phone.split())
-    if not 1 <= len(name) <= 120:
+    name, email, phone = normalize_name(name), normalize_email(email), normalize_phone(phone)
+    if not is_valid_name(name):
         raise InvalidBookingRequest("invalid_guest_name", "Enter the guest's name.")
-    if len(email) > 254 or not _EMAIL_RE.fullmatch(email):
+    if not is_valid_email(email):
         raise InvalidBookingRequest("invalid_guest_email", "Enter a valid email address.")
-    if len(phone) > 20 or not _PHONE_RE.fullmatch(phone):
+    if not is_valid_phone(phone):
         raise InvalidBookingRequest("invalid_guest_phone", "Enter a valid phone number.")
 
     hold = get_owned_hold(session, user_id, hold_id, lock=True)

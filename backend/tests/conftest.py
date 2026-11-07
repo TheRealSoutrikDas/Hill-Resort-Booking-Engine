@@ -10,12 +10,14 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from argon2 import PasswordHasher
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import ENV_FILES, normalize_database_url
 from app.db.session import create_db_engine
+from app.services import passwords
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 INTEGRATION_DIR = BACKEND_DIR / "tests" / "integration"
@@ -25,6 +27,13 @@ class _TestSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILES, env_ignore_empty=True, extra="ignore")
 
     test_database_url: str | None = None
+
+
+@pytest.fixture(autouse=True, scope="session")
+def cheap_password_hashing() -> None:
+    """Production argon2 takes about 170 ms per hash, on purpose. Tests use the same
+    algorithm with minimal cost so the suite stays fast (D-33)."""
+    passwords.use_hasher(PasswordHasher(time_cost=1, memory_cost=8, parallelism=1))
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:

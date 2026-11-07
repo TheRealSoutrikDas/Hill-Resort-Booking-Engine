@@ -2,7 +2,17 @@
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, CheckConstraint, Index, String, false, text
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    false,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -34,4 +44,22 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(16))
     team: Mapped[str | None] = mapped_column(String(16))
     is_gm: Mapped[bool] = mapped_column(Boolean, server_default=false())
+    # Consent given at sign-up (DPDP, A-75). Empty for seeded and staff accounts.
+    consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    consent_version: Mapped[str | None] = mapped_column(String(32))
     created_at: Mapped[datetime] = created_at_column()
+
+
+class UserSession(Base):
+    """A signed-in browser (A-72). The cookie holds a random token; only its SHA-256
+    hash is stored, so a copy of this table does not hand out live sessions."""
+
+    __tablename__ = "sessions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    # Sent back by the frontend in X-CSRF-Token on state-changing requests (A-74).
+    csrf_token: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = created_at_column()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

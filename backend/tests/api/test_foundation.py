@@ -31,8 +31,7 @@ from app.services.errors import (
     Shortfall,
     StockLocked,
 )
-
-FRONTEND = "http://localhost:3000"
+from tests.api.conftest import FRONTEND
 
 ERRORS = {
     "invalid_stay": (InvalidStay("check_in_in_past", "past"), 422, "check_in_in_past"),
@@ -97,12 +96,8 @@ def _build_test_routes() -> APIRouter:
 
 
 @pytest.fixture
-def client(committed: sessionmaker[Session], test_database_url: str):
-    settings = Settings(database_url=test_database_url, cors_origins=FRONTEND, _env_file=None)
-    app = create_app(settings, session_factory=committed)
-    app.include_router(_build_test_routes())
-    with TestClient(app) as test_client:
-        yield test_client
+def client(make_client) -> TestClient:
+    return make_client(_build_test_routes())
 
 
 # ---------- health (A-65) ----------

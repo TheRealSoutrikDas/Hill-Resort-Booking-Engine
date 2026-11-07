@@ -95,3 +95,31 @@ class PaymentNotAllowed(DomainError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class NotAuthenticated(DomainError):
+    """No valid session: the caller must sign in."""
+
+
+class Forbidden(DomainError):
+    """Signed in, but this account may not do this."""
+
+
+class CsrfFailed(DomainError):
+    """A state-changing request without a valid CSRF token or from a foreign origin."""
+
+
+class InvalidCredentials(DomainError):
+    """Wrong email or wrong password: one error for both (A-76)."""
+
+
+class EmailTaken(DomainError):
+    """An account with this email already exists (A-75)."""
+
+
+class InvalidSignup(DomainError):
+    """Sign-up details break a rule. `code` says which."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code

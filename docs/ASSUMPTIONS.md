@@ -14,7 +14,7 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-08 | Pricing | GST per room per night on the value actually charged (after promo discount): at or below Rs 7,500 is 5%, above is 18% (Notification 15/2025-CT(Rate), from 22 Sep 2025). Exactly Rs 7,500 is 5%. No exempt slab below Rs 1,000. Breakfast on the B&B plan is part of the room value. Discount and GST are rounded half up to the paise, once per unit-night. Threshold and rates are config values. | Confirmed |
 | A-09 | Seed | Values in `backend/app/seed/plan.py`: Deluxe Room 30, Estate View Room 22, Family Suite 12, Plantation Villa 8, Pool Villa 4; weekday room-only rates Rs 6,000 / 8,000 / 10,000 / 14,000 / 20,500, Fri and Sat nights +20%, 20 Dec to 5 Jan +40% (year average Rs 9,468); Bed and Breakfast +Rs 1,200; web allotment 25% (8/6/3/2/1); sold-out weekend about 2 weeks ahead, Family Suite with 1 unit left about 1 week ahead, 3 blackout nights about 5 weeks ahead; WELCOME10 valid, MONSOON15 expired, COFFEE20 cap reached; 40 bookings (8 past, 28 upcoming, 4 cancelled); 1 demo guest, 2 staff, 1 GM, plus one guest account per invented booking guest (37) because booking requires an account (A-43). | Confirmed |
 | A-10 | Export | Brief's column layout, one CSV row per booking line, plus a `line_number` column. `booking_id` repeats across a booking's lines; amount and tax columns are per line. | Confirmed |
-| A-11 | Auth | Browser calls the API through Next.js rewrites so the session cookie is first-party. | Open, confirm before stage 4 |
+| A-11 | Auth | Browser calls go through Next.js rewrites (`/api/*` to FastAPI), so the session cookie is first-party. | Confirmed |
 | A-12 | Auth | Superseded by A-43: signing in is required to book. Sign-up details are settled at the auth checkpoint. | Changed |
 | A-13 | Booking | One booking is one guest's purchase of any mix of room types and units. | Changed (was: one booking is one unit) |
 | A-13a | Booking | One stay per booking: every line shares the same check-in and check-out. Different dates means separate bookings. | Confirmed |
@@ -41,7 +41,7 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-31 | Promo | A promo's valid_from and valid_to dates are inclusive and compared with the booking date in IST. | Confirmed |
 | A-32 | Enquiries | In `sample_enquiries.json`, ENQ-4410 to ENQ-4412 are the client's samples; all others are invented for the demo. ENQ-4422 gained `event_month` 2027-01 (client approved). | Confirmed |
 | A-33 | Payments | A cancelled booking is fully refunded; no cancellation fee. | Confirmed |
-| A-34 | Seed | Every seeded account (demo accounts and booking guests) gets an unusable password marker until stage 4 sets real password hashes. | Proposed |
+| A-34 | Seed | Superseded by A-78: demo accounts get documented passwords; booking-guest accounts keep an unusable marker. | Changed |
 | A-35 | Seed | Seeded enquiries get a channel by position (web, email, whatsapp, web, phone, repeating), invented contact details, and are received over the last 72 hours. | Proposed |
 | A-36 | Seed | `--today` lets the seed run as if on a given date, for repeatable demos and tests. | Proposed |
 | A-37 | Availability | A night with no allotment row is not sellable online (0 available). | Confirmed |
@@ -77,3 +77,12 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-67 | API | Business routes live under `/api/...`; `/health` stays at the root for the hosting platform. | Confirmed |
 | A-68 | API | CORS allows only the configured frontend origins (`CORS_ORIGINS`), with credentials. | Confirmed |
 | A-69 | API | One database transaction per request: committed when the route succeeds, rolled back on any error. Checkout manages its own (D-31). | Confirmed |
+| A-70 | Auth | Passwords are hashed with argon2id (`argon2-cffi` defaults) and upgraded at login if the parameters change. | Confirmed |
+| A-71 | Auth | Passwords are 10 to 128 characters, with no composition rules. | Confirmed |
+| A-72 | Auth | Sessions live in the database with only a hash of the token stored; they expire 7 days after login (`SESSION_TTL_HOURS`); every login creates a new session and logout deletes it. | Confirmed |
+| A-73 | Auth | The session cookie is HttpOnly, SameSite=Lax, Path=/, host-only and Secure (`SESSION_COOKIE_SECURE`, on by default; browsers accept it on localhost). | Confirmed |
+| A-74 | Auth | CSRF in three layers: SameSite=Lax; state-changing requests from an Origin not in `CORS_ORIGINS` are refused; signed-in state-changing requests need the session's token in `X-CSRF-Token`. | Confirmed |
+| A-75 | Auth | Sign-up creates guests only; name, email, password and consent are required (consent time and version stored), phone optional; the guest is signed in at once; no verification or reset; an already registered email is reported plainly, with rate limits as protection. | Confirmed |
+| A-76 | Auth | Login gives one message for a wrong email or password, and an unknown email still costs a full verification against a dummy hash. | Confirmed |
+| A-77 | Auth | Booking routes are guest-only; staff routes need the staff role (and optionally a team, which the GM also passes); GM routes need the GM flag. Not signed in is 401; not allowed is 403. | Confirmed |
+| A-78 | Seed | The four demo accounts get documented passwords (README); the 37 booking-guest accounts cannot log in. | Confirmed |

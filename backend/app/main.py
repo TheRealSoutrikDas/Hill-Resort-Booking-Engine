@@ -18,8 +18,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-from app.api import health
+from app.api import auth, health
 from app.api.errors import error_response, register_error_handlers
+from app.api.security import OriginCheckMiddleware
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, exception_fields, request_id_var, safe_request_id
 from app.db.session import create_db_engine
@@ -94,8 +95,10 @@ def create_app(
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
         allow_headers=["Content-Type", "X-Request-ID", "X-CSRF-Token", "Idempotency-Key"],
     )
+    app.add_middleware(OriginCheckMiddleware, trusted_origins=settings.cors_origins)
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
 
     app.include_router(health.router)
+    app.include_router(auth.router)
     return app

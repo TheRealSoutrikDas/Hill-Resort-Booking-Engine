@@ -196,9 +196,9 @@ PROMOS: tuple[PromoPlan, ...] = (
 
 # ---------- users ----------
 
-# Seeded accounts cannot log in until stage 4 sets real password hashes (A-34).
-# Besides the demo accounts below, every invented booking guest gets a guest account,
-# because signing in is required to book (A-43).
+# Every invented booking guest gets a guest account, because signing in is required to
+# book (A-43). Those accounts cannot log in: their password hash is this marker, which
+# no password matches. Only the four demo accounts below can log in (A-78).
 UNUSABLE_PASSWORD_HASH = "!"
 
 
@@ -210,14 +210,29 @@ class UserPlan:
     team: str | None
     is_gm: bool
     phone: str | None
+    # Demo login, documented in the README for reviewers. A real production deployment
+    # would not load demo accounts.
+    password: str
 
 
 DEMO_GUEST_EMAIL = "guest@example.com"
 USERS: tuple[UserPlan, ...] = (
-    UserPlan(DEMO_GUEST_EMAIL, "Demo Guest", "guest", None, False, "+91 00000 00001"),
-    UserPlan("reservations@example.com", "Reservations Desk", "staff", "reservations", False, None),
-    UserPlan("events@example.com", "Events Team", "staff", "events", False, None),
-    UserPlan("gm@example.com", "General Manager", "staff", None, True, None),
+    UserPlan(
+        DEMO_GUEST_EMAIL, "Demo Guest", "guest", None, False, "+91 00000 00001", "Guest-Demo-2026"
+    ),
+    UserPlan(
+        "reservations@example.com",
+        "Reservations Desk",
+        "staff",
+        "reservations",
+        False,
+        None,
+        "Reservations-Demo-2026",
+    ),
+    UserPlan(
+        "events@example.com", "Events Team", "staff", "events", False, None, "Events-Demo-2026"
+    ),
+    UserPlan("gm@example.com", "General Manager", "staff", None, True, None, "GM-Demo-2026"),
 )
 DEMO_GUEST_BOOKINGS = ("past", "upcoming", "cancelled")
 

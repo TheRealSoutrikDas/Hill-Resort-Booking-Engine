@@ -3,7 +3,7 @@
 from app.db.models.booking import Booking, BookingItem, Hold, HoldItem, HoldItemNight, Payment
 from app.db.models.enquiry import AuditLog, Enquiry, GmAlert
 from app.db.models.inventory import Allotment, DailyRate, PromoCode, RatePlan, RoomType
-from app.db.models.users import User
+from app.db.models.users import User, UserSession
 
 __all__ = [
     "Allotment",
@@ -21,4 +21,5 @@ __all__ = [
     "RatePlan",
     "RoomType",
     "User",
+    "UserSession",
 ]

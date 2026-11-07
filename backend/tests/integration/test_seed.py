@@ -32,6 +32,7 @@ from app.seed.build import (
     seed,
     verify,
 )
+from app.services.passwords import verify_password
 from app.services.pricing import GstRule
 from app.services.references import is_valid_booking_reference
 
@@ -241,7 +242,13 @@ def test_demo_accounts(seeded: Session) -> None:
     }
     staff = {u.email for u in users.values() if u.role == "staff"}
     assert staff == {"reservations@example.com", "events@example.com", "gm@example.com"}
-    assert all(u.password_hash == plan.UNUSABLE_PASSWORD_HASH for u in users.values())
+    demo = {u.email: u.password for u in plan.USERS}
+    for user in users.values():  # A-78: only the demo accounts can log in
+        if user.email in demo:
+            assert verify_password(user.password_hash, demo[user.email])
+        else:
+            assert user.password_hash == plan.UNUSABLE_PASSWORD_HASH
+            assert not verify_password(user.password_hash, "anything")
 
     guest_bookings = seeded.scalars(
         select(Booking).where(Booking.user_id == users["guest@example.com"].id)
