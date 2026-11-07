@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-from app.api import auth, health, lookup, rooms
+from app.api import auth, bookings, health, holds, lookup, rooms
 from app.api.errors import error_response, register_error_handlers
 from app.api.security import OriginCheckMiddleware
 from app.core.clock import utc_now
@@ -28,6 +28,7 @@ from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, exception_fields, request_id_var, safe_request_id
 from app.core.ratelimit import SlidingWindowLimiter
 from app.db.session import create_db_engine
+from app.services.payments import get_payment_provider
 
 logger = logging.getLogger("app.access")
 
@@ -92,6 +93,7 @@ def create_app(
     app.state.session_factory = session_factory
     app.state.engine = session_factory.kw["bind"]
     app.state.clock = clock
+    app.state.payment_provider = get_payment_provider(settings)
     # One limiter per app: counts live in this process (A-82).
     app.state.limiter = SlidingWindowLimiter()
 
@@ -111,4 +113,6 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(rooms.router)
     app.include_router(lookup.router)
+    app.include_router(holds.router)
+    app.include_router(bookings.router)
     return app

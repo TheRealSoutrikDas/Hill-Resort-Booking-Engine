@@ -1,6 +1,6 @@
 """Request dependencies: settings, and one database transaction per request (A-69)."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import datetime
 from typing import Annotated
 
@@ -8,6 +8,7 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import Settings
+from app.services.payments.provider import PaymentProvider
 from app.services.quotes import HoldRules
 
 
@@ -22,6 +23,14 @@ def get_now(request: Request) -> datetime:
 
 def get_rules(request: Request) -> HoldRules:
     return HoldRules.from_settings(request.app.state.settings)
+
+
+def get_clock(request: Request) -> Callable[[], datetime]:
+    return request.app.state.clock
+
+
+def get_payment_provider_dep(request: Request) -> PaymentProvider:
+    return request.app.state.payment_provider
 
 
 def get_session_factory_dep(request: Request) -> sessionmaker[Session]:
@@ -42,3 +51,5 @@ AppSettings = Annotated[Settings, Depends(get_app_settings)]
 SessionFactory = Annotated[sessionmaker[Session], Depends(get_session_factory_dep)]
 Now = Annotated[datetime, Depends(get_now)]
 Rules = Annotated[HoldRules, Depends(get_rules)]
+Clock = Annotated[Callable[[], datetime], Depends(get_clock)]
+Provider = Annotated[PaymentProvider, Depends(get_payment_provider_dep)]

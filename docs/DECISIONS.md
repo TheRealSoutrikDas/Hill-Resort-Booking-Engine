@@ -240,3 +240,14 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Lookup accepts the guest email or the account email, never puts the email in a URL, masks it in the answer and omits the phone. A wrong reference and a wrong email return the same 404. A malformed reference is rejected before the query; that is an optimisation only, since the query would return the same 404.
 - Routes read the time from the app's clock (`Now` dependency, D-22), so API tests run against fixed dates.
 
+## D-36 Signed-in guest routes (step 12b)
+
+- The three-step flow: `POST /api/holds` (rooms and price, held 10 minutes), `PUT /api/holds/{id}/guest` (who is staying), `POST /api/holds/{id}/payment` (pay, with a required `Idempotency-Key` header). Plus `GET /api/holds/{id}` for page reloads, `DELETE /api/holds/{id}` to release, `GET /api/bookings/{reference}` for the confirmation page and receipt, and `POST /api/bookings/{reference}/cancel`.
+- All use `GuestUser`: signed out is 401, staff 403, a missing CSRF token 403, another guest's hold or booking 404.
+- Holds and bookings show prices read from the stored per-night rows, never recalculated, so a later rate change cannot alter a receipt (A-45). A test checks that the quote, the hold and the booking show the same price.
+- A hold past its expiry is reported as `expired` (its stored status stays `active`; expiry is lazy).
+- The confirmation page says whether online cancellation is still open (`can_cancel`, closing the day before check-in, A-51).
+- The payment provider lives on the app state, so tests give each app a fresh mock.
+- Honest note on payment: the sign-in check reads the session in a short read-only transaction that stays open while the gateway is called. It holds no row locks, so nothing waits on it; the rule in D-31 (no gateway call while holding locks) still holds.
+- Test evidence: making the routes accept any signed-in user, reporting expired holds as active, always offering cancellation, making the idempotency key optional, or computing the receipt's taxable amount without the discount each makes tests fail.
+
