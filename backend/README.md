@@ -15,4 +15,4 @@ tests/integration/  Tests against real Postgres, including the concurrency test
 data/               sample_enquiries.json (evaluation set and seed source)
 ```
 
-Setup instructions arrive in stage 1, step 2.
+Setup and test commands are in the root README. Run all backend commands from this folder.
