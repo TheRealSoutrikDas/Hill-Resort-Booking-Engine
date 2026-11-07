@@ -28,7 +28,9 @@ def normalize_database_url(url: str) -> str:
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_FILES, extra="ignore")
+    # env_ignore_empty: a blank line such as BUSINESS_TIMEZONE= in .env counts as unset,
+    # so the default applies (and a blank required value fails as missing).
+    model_config = SettingsConfigDict(env_file=ENV_FILES, env_ignore_empty=True, extra="ignore")
 
     database_url: str
     business_timezone: str = "Asia/Kolkata"
@@ -44,7 +46,7 @@ class Settings(BaseSettings):
     def _check_timezone(cls, value: str) -> str:
         try:
             ZoneInfo(value)
-        except ZoneInfoNotFoundError as exc:
+        except (ZoneInfoNotFoundError, ValueError) as exc:
             raise ValueError(f"Unknown timezone: {value}") from exc
         return value
 
