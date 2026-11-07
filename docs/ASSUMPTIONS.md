@@ -66,3 +66,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-56 | Promo | If a hold expired and its code's last use was taken meanwhile, confirmation fails and the payment is refunded (as with stock, A-50). | Confirmed |
 | A-57 | Promo | Codes are trimmed and case-insensitive; one code per booking. | Confirmed |
 | A-58 | Promo | Error messages say why a code cannot be used (not found, switched off, not started, expired, used up); promo codes are not secrets. | Confirmed |
+| A-59 | Payments | In test mode the payment step lets the guest pick the simulated outcome (success, decline, timeout), like a gateway's test cards. | Confirmed |
+| A-60 | Payments | A payment can only start on an active hold with guest details; an expired hold means starting again. The brief's expired-hold case still occurs when the hold expires during the charge. | Confirmed |
+| A-61 | Payments | The browser makes a new idempotency key for each deliberate click on Pay; a double click or automatic retry reuses it. A declined or timed-out attempt is final for its key. | Confirmed |
+| A-62 | Payments | A mock timeout means "not charged". A real gateway's timeout means "unknown"; a real integration would ask the gateway what happened to the key before retrying. Known limit of the mock. | Confirmed |
+| A-63 | Payments | Refunds are processed straight away through the mock and end `refunded`; if a refund call fails the payment stays `refund_pending` and can be retried. | Confirmed |
