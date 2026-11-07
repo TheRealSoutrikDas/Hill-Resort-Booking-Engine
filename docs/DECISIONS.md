@@ -223,3 +223,12 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Test evidence: removing the CSRF check, the dummy verification, the extra-field ban, the session rotation, the Origin check, the token hashing or the team check each makes tests fail.
 - Dependency: `argon2-cffi` 25.1.0.
 
+## D-34 In-memory sliding-window rate limits
+
+- Chosen: `SlidingWindowLimiter` keeps, per key, the times of recent attempts within the window: exact, with no burst at window edges. A lock makes it safe across threads; at most 10,000 keys, least recently used dropped first, so a flood of fake IPs cannot exhaust memory.
+- Applied: per client IP on login and sign-up now, and on booking lookup and enquiries when those routes are built (one dependency, `limit_per_ip(name)`). Failed logins are also limited per account email (hashed), checked before the password is verified so a locked account cannot be guessed at all.
+- Limits: per process and lost on restart, accepted because the brief allows in-memory limits; the deployment runs one instance with one worker (deployment.md), which the mock gateway already requires.
+- Client IP: `request.client.host`, which uvicorn sets from X-Forwarded-For only for trusted proxy addresses.
+- Rejected: `slowapi` (a library for about 60 lines of explainable code); fixed one-minute counters (allow double bursts at the boundary); Redis (out of scope).
+- Test evidence: removing the per-IP login limit, the email lock check, the clearing on success, the email normalisation, the memory cap or the LRU ordering each makes tests fail.
+
