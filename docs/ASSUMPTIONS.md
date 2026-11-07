@@ -97,3 +97,9 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-87 | API | Payment returns 200 with a status once the gateway has been called; refusals before any charge are errors; `Idempotency-Key` is a required header. | Confirmed |
 | A-88 | API | Room photos are static frontend files named by room code, with sources in `docs/PHOTO_SOURCES.md`; the API carries no photo data. | Confirmed |
 | A-89 | API | All amounts in responses are integer paise; the frontend formats them. | Confirmed |
+| A-90 | Export | Only the reservations team and the GM may download the export (it holds every guest's contact details). | Confirmed |
+| A-91 | Export | Each row is the day's event: confirmations on their IST date, cancellations on theirs, both rows when they happen the same day. A day's file never changes once the day is over. | Confirmed |
+| A-92 | Export | `booking_id` is the booking reference; `room_type` and `rate_plan` are codes. | Confirmed |
+| A-93 | Export | `payment_status` is the event (`paid` or `refund`), not the payment's current state; `payment_reference` is the gateway's. | Confirmed |
+| A-94 | Export | Dates are ISO; `created_at` is the confirmation time in IST with its offset. | Confirmed |
+| A-95 | Export | UTF-8, header row, standard quoting, CRLF. Name and email cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading apostrophe. Served with `Cache-Control: no-store`. | Confirmed |
