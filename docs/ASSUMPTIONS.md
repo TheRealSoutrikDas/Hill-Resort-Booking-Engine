@@ -61,3 +61,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-51 | Booking | A guest can cancel online until the day before check-in (IST); from check-in day they contact the resort. | Confirmed |
 | A-52 | Payments | Cancelling marks the payment `refund_pending`; the mock provider completes the refund in step 10. | Confirmed |
 | A-53 | Booking | Only the account that made a booking can cancel it; staff cancellations are not part of the brief's admin screens. | Confirmed |
+| A-54 | Promo | A hold reserves one use of its promo code, like it reserves rooms: a code with N uses left can be on at most N active holds. The use is counted when the booking is confirmed (A-20). | Confirmed |
+| A-55 | Promo | A code's dates and on/off switch are checked when the hold is created; if the code expires or is switched off during the 10 minutes, the guest keeps the discount (A-45). | Confirmed |
+| A-56 | Promo | If a hold expired and its code's last use was taken meanwhile, confirmation fails and the payment is refunded (as with stock, A-50). | Confirmed |
+| A-57 | Promo | Codes are trimmed and case-insensitive; one code per booking. | Confirmed |
+| A-58 | Promo | Error messages say why a code cannot be used (not found, switched off, not started, expired, used up); promo codes are not secrets. | Confirmed |

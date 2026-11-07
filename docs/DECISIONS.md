@@ -186,3 +186,11 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Honest limit: the deadlock test also passes without the `ORDER BY` in the lock query, because Postgres usually scans these rows in a consistent order anyway. The `ORDER BY` makes that order a guarantee rather than a property of the query plan.
 - Rejected: SQLite for these tests (no row locks, so it cannot show the guarantee), and asserting on timings (flaky; the tests assert only on counts).
 
+## D-30 Promo uses are reserved like stock, and quotes share the hold's code path
+
+- Promo uses: `uses left = max_uses - used_count - active holds using the code`. Creating a hold locks the promo row (`SELECT ... FOR UPDATE`) and checks a use is left, so the second guest learns the code is used up before paying, not after. Confirmation counts the use (A-20); an expired or released hold gives it back lazily, exactly like stock. The database check `used_count <= max_uses` is the backstop.
+- Lock order, extended for every writer: allotment rows, then the promo row, then the hold or booking row (D-21).
+- Rejected: checking the cap only at confirmation (a guest could pay and then be refused for a reason they could not see).
+- Quotes: `quote_stay` validates the request, checks the catalogue, applies the promo and prices the stay without locks or writes. `create_hold` calls it, then locks and writes. The price shown on the room page and the price held therefore come from one code path; a test asserts they are equal, with and without a promo.
+- Test evidence: removing the use reservation, the use count, the "leave this hold out" rule or the promo row lock each makes tests fail. The race test gives every guest a different night, so the allotment lock cannot hide a missing promo lock.
+
