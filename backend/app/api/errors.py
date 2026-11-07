@@ -19,12 +19,18 @@ from app.core.logging import request_id_var
 from app.services.errors import (
     BookingNotFound,
     CancellationNotAllowed,
+    CsrfFailed,
     DomainError,
+    EmailTaken,
+    Forbidden,
     HoldNotActive,
     HoldNotFound,
     InvalidBookingRequest,
+    InvalidCredentials,
     InvalidPromoCode,
+    InvalidSignup,
     InvalidStay,
+    NotAuthenticated,
     NotAvailable,
     PaymentMismatch,
     PaymentNotAllowed,
@@ -58,6 +64,12 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     HoldNotFound: (404, "hold_not_found"),
     BookingNotFound: (404, "booking_not_found"),
     StockLocked: (503, "busy_try_again"),
+    NotAuthenticated: (401, "not_authenticated"),
+    InvalidCredentials: (401, "invalid_credentials"),
+    Forbidden: (403, "forbidden"),
+    CsrfFailed: (403, "csrf_failed"),
+    EmailTaken: (409, "email_taken"),
+    InvalidSignup: (422, "invalid_signup"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}
