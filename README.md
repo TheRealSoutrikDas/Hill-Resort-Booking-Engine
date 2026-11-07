@@ -71,7 +71,19 @@ ruff check . && ruff format --check .
 ```
 
 Integration tests run against real PostgreSQL and refuse any database whose name
-does not end in `_test`.
+does not end in `_test`. Each run rebuilds the test schema from the migrations.
+
+## Migrations
+
+Run from `backend/`:
+
+```bash
+alembic upgrade head                                 # apply all migrations
+alembic downgrade -1                                 # undo the latest one
+alembic upgrade head --sql                           # print the SQL without running it
+alembic check                                        # fail if models and migrations differ
+alembic revision --autogenerate -m "describe change" # new migration; always review it
+```
 
 ## Enquiry evaluation
 
