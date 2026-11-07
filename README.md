@@ -58,7 +58,21 @@ started Postgres before this existed, reset it with `docker compose down -v`
 
 ## Seed data
 
-`python -m app.seed --reset` (stage 1, step 3).
+Run from `backend/` after `alembic upgrade head`:
+
+```bash
+python -m app.seed --reset                    # empty all tables, then load demo data
+python -m app.seed --reset --today 2026-11-07 # as if today were that date
+```
+
+Loads 76 keys (64 rooms, 12 villas), nightly rates and web allotment from 60 days ago
+to 180 days ahead, 3 promo codes, 40 bookings, 4 demo accounts and the 27 sample
+enquiries. It also creates three states to demonstrate: a Family Suite with one unit
+left, a sold-out weekend and a three-night blackout (dates are printed at the end).
+All numbers are in `backend/app/seed/plan.py`; all personal data is invented.
+
+Without `--reset` the command refuses to touch a database that has data. It runs in
+one transaction and checks its own output before committing.
 
 ## Tests
 

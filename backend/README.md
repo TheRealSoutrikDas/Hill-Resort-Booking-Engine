@@ -9,6 +9,8 @@ app/db/             SQLAlchemy base, session and models (users, inventory, booki
 app/schemas/        Pydantic request and response models
 app/classifiers/    EnquiryClassifier interface and backends (keyword, llm)
 app/core/           Settings, logging, security, error format
+app/seed/           Demo data: plan.py (all numbers), build.py (writes rows), __main__.py (CLI)
+app/enquiry_samples.py  Validated loader for data/sample_enquiries.json
 alembic/            Migrations
 tests/unit/         Fast tests, no database
 tests/integration/  Tests against real Postgres, including the concurrency test

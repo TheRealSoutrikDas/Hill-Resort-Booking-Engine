@@ -97,6 +97,8 @@ class HoldItem(Base):
         CheckConstraint("units > 0", name="units_positive"),
         CheckConstraint("guests > 0", name="guests_positive"),
         CheckConstraint("subtotal_paise >= 0", name="subtotal_non_negative"),
+        CheckConstraint("discount_paise >= 0", name="discount_non_negative"),
+        CheckConstraint("discount_paise <= subtotal_paise", name="discount_within_subtotal"),
         CheckConstraint("tax_paise >= 0", name="tax_non_negative"),
     )
 
@@ -108,6 +110,7 @@ class HoldItem(Base):
     units: Mapped[int] = mapped_column(Integer)
     guests: Mapped[int] = mapped_column(Integer)
     subtotal_paise: Mapped[int] = mapped_column(BigInteger)
+    discount_paise: Mapped[int] = mapped_column(BigInteger, server_default="0")
     tax_paise: Mapped[int] = mapped_column(BigInteger)
 
     hold: Mapped[Hold] = relationship(back_populates="items")
@@ -117,12 +120,14 @@ class HoldItem(Base):
 
 
 class HoldItemNight(Base):
-    """Per-unit tariff and GST for one night of one line. Never changed after creation;
+    """Per-unit tariff, discount and GST for one night of one line. Never changed after creation;
     the receipt reads it through booking_items.hold_item_id."""
 
     __tablename__ = "hold_item_nights"
     __table_args__ = (
         CheckConstraint("rate_paise > 0", name="rate_positive"),
+        CheckConstraint("discount_paise >= 0", name="discount_non_negative"),
+        CheckConstraint("discount_paise <= rate_paise", name="discount_within_rate"),
         CheckConstraint("tax_paise >= 0", name="tax_non_negative"),
         CheckConstraint("tax_rate_bp >= 0", name="tax_rate_non_negative"),
     )
@@ -132,6 +137,9 @@ class HoldItemNight(Base):
     )
     stay_date: Mapped[date] = mapped_column(Date, primary_key=True, index=True)
     rate_paise: Mapped[int] = mapped_column(BigInteger)
+    # Promo discount on this unit-night. GST is charged on rate_paise - discount_paise,
+    # and the slab is chosen on that same value (A-08).
+    discount_paise: Mapped[int] = mapped_column(BigInteger, server_default="0")
     tax_paise: Mapped[int] = mapped_column(BigInteger)
     # GST rate applied, in basis points (1200 = 12%), so the receipt shows the rate used.
     tax_rate_bp: Mapped[int] = mapped_column(Integer)
@@ -223,6 +231,8 @@ class BookingItem(Base):
         CheckConstraint("units > 0", name="units_positive"),
         CheckConstraint("guests > 0", name="guests_positive"),
         CheckConstraint("subtotal_paise >= 0", name="subtotal_non_negative"),
+        CheckConstraint("discount_paise >= 0", name="discount_non_negative"),
+        CheckConstraint("discount_paise <= subtotal_paise", name="discount_within_subtotal"),
         CheckConstraint("tax_paise >= 0", name="tax_non_negative"),
     )
 
@@ -235,6 +245,7 @@ class BookingItem(Base):
     units: Mapped[int] = mapped_column(Integer)
     guests: Mapped[int] = mapped_column(Integer)
     subtotal_paise: Mapped[int] = mapped_column(BigInteger)
+    discount_paise: Mapped[int] = mapped_column(BigInteger, server_default="0")
     tax_paise: Mapped[int] = mapped_column(BigInteger)
 
     booking: Mapped[Booking] = relationship(back_populates="items")
