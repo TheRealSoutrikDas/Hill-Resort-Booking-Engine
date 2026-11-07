@@ -154,3 +154,11 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Chosen: migration 0003 checks for holds or bookings without an account and stops with instructions instead of altering the column.
 - Why: there is no correct owner to invent for existing rows. On a development database the fix is to rebuild it; production data would need an agreed backfill plan. A test proves the migration refuses such rows.
 
+## D-26 Hold creation keeps the locked part as short as possible
+
+- Chosen: `create_hold` runs in a fixed order: date and line rules (no database), then room types, rate plans and rates (plain reads), then `lock_and_check`, then price and insert. The caller commits straight after.
+- Why: a bad request is rejected without taking any lock, and rates are not stock, so they do not need the stock lock. Only "check stock, write hold" happens while other bookings for those nights wait.
+- Guest details and release lock only the hold row (`SELECT ... FOR UPDATE` on the hold), so a double click on the same hold runs one request after the other.
+- Release does not take the allotment locks: it only frees stock, so a check running at the same moment can at worst see slightly less stock than there is, never more.
+- Ownership: every hold lookup filters by the signed-in account; another account's hold is "not found" (A-43). A test proves this, and removing the filter makes it fail.
+

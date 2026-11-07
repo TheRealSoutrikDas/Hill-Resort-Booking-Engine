@@ -2,14 +2,11 @@
 
 import threading
 import time
-from collections.abc import Iterator
 from datetime import date, timedelta
 
 import pytest
-from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.seed.build import reset_database
 from app.services.availability import (
     StockRequest,
     lock_allotments,
@@ -167,18 +164,6 @@ def test_rejects_non_positive_units(db: Session, units: int) -> None:
 
 
 # ---------- real row locks across two connections ----------
-
-
-@pytest.fixture
-def committed(schema: Engine) -> Iterator[sessionmaker[Session]]:
-    """Sessions that really commit, so a second connection can see the rows.
-    Every table is emptied afterwards."""
-    factory = sessionmaker(bind=schema, expire_on_commit=False)
-    try:
-        yield factory
-    finally:
-        with factory() as s, s.begin():
-            reset_database(s)
 
 
 def _stock(factory: sessionmaker[Session]) -> int:

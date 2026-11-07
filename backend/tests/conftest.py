@@ -12,7 +12,7 @@ from alembic import command
 from alembic.config import Config
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Engine, make_url
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import ENV_FILES, normalize_database_url
 from app.db.session import create_db_engine
@@ -94,3 +94,17 @@ def db(schema: Engine) -> Iterator[Session]:
         finally:
             session.close()
             trans.rollback()
+
+
+@pytest.fixture
+def committed(schema: Engine) -> Iterator[sessionmaker[Session]]:
+    """Sessions that really commit, for tests that need a second connection to see the
+    data (row locks, races). Every table is emptied afterwards."""
+    from app.seed.build import reset_database
+
+    factory = sessionmaker(bind=schema, expire_on_commit=False)
+    try:
+        yield factory
+    finally:
+        with factory() as s, s.begin():
+            reset_database(s)

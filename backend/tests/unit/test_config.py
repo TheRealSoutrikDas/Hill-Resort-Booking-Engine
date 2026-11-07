@@ -101,8 +101,15 @@ def test_invalid_gst_settings_rejected(
 
 def test_booking_rule_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@host:5432/db")
-    for name in ("BOOKING_HORIZON_DAYS", "MAX_STAY_NIGHTS", "LOCK_TIMEOUT_MS"):
+    for name in (
+        "BOOKING_HORIZON_DAYS",
+        "MAX_STAY_NIGHTS",
+        "LOCK_TIMEOUT_MS",
+        "MAX_UNITS_PER_BOOKING",
+        "HOLD_TTL_MINUTES",
+    ):
         monkeypatch.delenv(name, raising=False)
     settings = Settings(_env_file=None)
     assert (settings.booking_horizon_days, settings.max_stay_nights) == (180, 14)
     assert settings.lock_timeout_ms == 5_000
+    assert (settings.max_units_per_booking, settings.hold_ttl_minutes) == (4, 10)
