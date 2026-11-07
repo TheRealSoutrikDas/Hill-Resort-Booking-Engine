@@ -5,8 +5,6 @@ in service code still cannot oversell, double-book or store inconsistent money.
 """
 
 import random
-import uuid
-from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -14,100 +12,15 @@ from sqlalchemy.orm import Session
 
 from app.db.models import (
     Allotment,
-    Booking,
     BookingItem,
     Enquiry,
     GmAlert,
-    Hold,
     HoldItem,
-    Payment,
     PromoCode,
-    RatePlan,
-    RoomType,
     User,
 )
 from app.services.references import generate_booking_reference
-
-STAY = date(2027, 2, 12)
-NOW = datetime(2026, 11, 7, 10, 0, tzinfo=UTC)
-
-
-# ---------- small builders: only the columns each table requires ----------
-
-
-def room_type(db: Session, code: str = "DLX") -> RoomType:
-    rt = RoomType(code=code, name="Deluxe", kind="room", total_units=10, max_guests=3)
-    db.add(rt)
-    db.flush()
-    return rt
-
-
-def rate_plan(db: Session, code: str = "RO") -> RatePlan:
-    rp = RatePlan(code=code, name="Room only")
-    db.add(rp)
-    db.flush()
-    return rp
-
-
-def hold(db: Session, **overrides) -> Hold:
-    values = dict(
-        check_in=STAY,
-        check_out=STAY + timedelta(days=2),
-        subtotal_paise=1_900_000,
-        discount_paise=0,
-        tax_paise=228_000,
-        total_paise=2_128_000,
-        expires_at=NOW + timedelta(minutes=10),
-    )
-    values.update(overrides)
-    h = Hold(**values)
-    db.add(h)
-    db.flush()
-    return h
-
-
-def payment(db: Session, h: Hold, key: str | None = None, status: str = "succeeded") -> Payment:
-    p = Payment(
-        hold_id=h.id,
-        idempotency_key=key or uuid.uuid4().hex,
-        amount_paise=h.total_paise,
-        status=status,
-    )
-    db.add(p)
-    db.flush()
-    return p
-
-
-def booking(db: Session, h: Hold, p: Payment, **overrides) -> Booking:
-    values = dict(
-        reference="BK-7F3K9QXM",
-        hold_id=h.id,
-        payment_id=p.id,
-        check_in=h.check_in,
-        check_out=h.check_out,
-        guest_name="Asha Rao",
-        guest_email="asha@example.com",
-        guest_phone="+91 90000 00001",
-        subtotal_paise=h.subtotal_paise,
-        discount_paise=h.discount_paise,
-        tax_paise=h.tax_paise,
-        total_paise=h.total_paise,
-        confirmed_at=NOW,
-    )
-    values.update(overrides)
-    b = Booking(**values)
-    db.add(b)
-    db.flush()
-    return b
-
-
-def staff(db: Session, email: str, **overrides) -> User:
-    values = dict(email=email, password_hash="x", full_name="Staff", role="staff")
-    values.update(overrides)
-    u = User(**values)
-    db.add(u)
-    db.flush()
-    return u
+from tests.factories import STAY, booking, hold, payment, rate_plan, room_type, staff
 
 
 def rejects(db: Session, obj: object | None = None) -> None:
