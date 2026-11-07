@@ -34,6 +34,7 @@ from app.db.models import (
 from app.db.models.enums import BookingStatus, HoldStatus, PaymentStatus
 from app.enquiry_samples import SampleEnquiryFile
 from app.seed import plan
+from app.services.passwords import hash_password
 from app.services.pricing import GstRule, LineInput, price_stay
 from app.services.references import generate_booking_reference
 
@@ -275,7 +276,7 @@ def _seed_users(session: Session) -> dict[str, User]:
     users = {
         u.email: User(
             email=u.email,
-            password_hash=plan.UNUSABLE_PASSWORD_HASH,
+            password_hash=hash_password(u.password),
             full_name=u.full_name,
             role=u.role,
             team=u.team,
