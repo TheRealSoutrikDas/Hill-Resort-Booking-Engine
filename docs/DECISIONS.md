@@ -104,3 +104,14 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 
 - Chosen: the pure pricing functions and the reference generator moved from stage 3 into step 3a.
 - Why: the seed creates paid bookings, and their amounts must come from the real pricing rules, never from guessed numbers. Promo validity rules and the API stay in stage 3.
+
+## D-19 Discount stored per night and per line (migration 0002)
+
+- Chosen: `discount_paise` on `hold_item_nights`, `hold_items` and `booking_items`, with CHECK constraints, added by a second migration.
+- Why: the GST slab is chosen after the discount (A-08), so a night's GST is only explainable next to its discount, and the per-line export amount must be exact. The constraints were written by hand because Alembic autogenerate does not detect CHECK constraints added to existing tables.
+
+## D-20 Seed design
+
+- Chosen: one command, one transaction. Every number lives in `app/seed/plan.py`. Bookings are planned in memory first, so allotments are written with matching `sold` counts. Every booking is priced with the real pricing functions. A self-check compares `sold` with the confirmed bookings and promo `used_count` with promo bookings before commit. A fixed random seed and dates relative to today make it deterministic for a given date.
+- Safety: refuses to run if the schema is not at the latest migration, and refuses to replace existing data without `--reset`. If anything fails, nothing is written.
+- Rejected: SQL fixture files (cannot stay relative to today), a fake-data library (another dependency, and less control over deliberate states).

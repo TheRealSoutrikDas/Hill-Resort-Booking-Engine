@@ -11,8 +11,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-05 | Tooling | Lint with ruff (backend) and the Next.js ESLint config (frontend). | Confirmed |
 | A-06 | Workflow | The initial skeleton commit goes straight to `main`; all later work uses feature branches and PRs. | Confirmed |
 | A-07 | AI | LLM provider and model. Proposed in stage 5. | Open |
-| A-08 | Pricing | GST per room per night on the value actually charged (after promo discount): at or below Rs 7,500 is 5%, above is 18% (Notification 15/2025-CT(Rate), from 22 Sep 2025). Exactly Rs 7,500 is 5%. No exempt slab below Rs 1,000. Breakfast on the B&B plan is part of the room value. Discount and GST are rounded half up to the paise, once per unit-night. Threshold and rates are config values. | Proposed, client to verify the after-discount basis |
-| A-09 | Seed | Room types, rate plans, rates, allotment fraction, blackout dates, promo codes, booking count. Proposed in stage 1, step 3. | Open |
+| A-08 | Pricing | GST per room per night on the value actually charged (after promo discount): at or below Rs 7,500 is 5%, above is 18% (Notification 15/2025-CT(Rate), from 22 Sep 2025). Exactly Rs 7,500 is 5%. No exempt slab below Rs 1,000. Breakfast on the B&B plan is part of the room value. Discount and GST are rounded half up to the paise, once per unit-night. Threshold and rates are config values. | Confirmed |
+| A-09 | Seed | Values in `backend/app/seed/plan.py`: Deluxe Room 30, Estate View Room 22, Family Suite 12, Plantation Villa 8, Pool Villa 4; weekday room-only rates Rs 6,000 / 8,000 / 10,000 / 14,000 / 20,500, Fri and Sat nights +20%, 20 Dec to 5 Jan +40% (year average Rs 9,468); Bed and Breakfast +Rs 1,200; web allotment 25% (8/6/3/2/1); sold-out weekend about 2 weeks ahead, Family Suite with 1 unit left about 1 week ahead, 3 blackout nights about 5 weeks ahead; WELCOME10 valid, MONSOON15 expired, COFFEE20 cap reached; 40 bookings (8 past, 28 upcoming, 4 cancelled); 1 guest, 2 staff, 1 GM. | Confirmed |
 | A-10 | Export | Brief's column layout, one CSV row per booking line, plus a `line_number` column. `booking_id` repeats across a booking's lines; amount and tax columns are per line. | Confirmed |
 | A-11 | Auth | Browser calls the API through Next.js rewrites so the session cookie is first-party. | Open, confirm before stage 4 |
 | A-12 | Auth | Guest checkout plus optional sign up; earlier guest bookings are never attached by email automatically. | Open, confirm before stage 4 |
@@ -39,3 +39,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-29 | Payments | A hold may have several payment attempts (for example a failure, then a retry), but at most one that captured money. | Confirmed |
 | A-30 | Enquiries | Enquiry references are `ENQ-` plus at least 4 digits, matching the client's samples (ENQ-4410). | Confirmed |
 | A-31 | Promo | A promo's valid_from and valid_to dates are inclusive and compared with the booking date in IST. | Confirmed |
+| A-32 | Enquiries | In `sample_enquiries.json`, ENQ-4410 to ENQ-4412 are the client's samples; all others are invented for the demo. ENQ-4422 gained `event_month` 2027-01 (client approved). | Confirmed |
+| A-33 | Payments | A cancelled booking is fully refunded (mock payment status `refunded`); no cancellation fee. | Proposed |
+| A-34 | Seed | Seeded accounts get an unusable password marker until stage 4 sets real password hashes. | Proposed |
+| A-35 | Seed | Seeded enquiries get a channel by position (web, email, whatsapp, web, phone, repeating), invented contact details, and are received over the last 72 hours. | Proposed |
+| A-36 | Seed | `--today` lets the seed run as if on a given date, for repeatable demos and tests. | Proposed |
