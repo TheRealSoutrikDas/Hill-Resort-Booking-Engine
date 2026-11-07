@@ -162,3 +162,18 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Release does not take the allotment locks: it only frees stock, so a check running at the same moment can at worst see slightly less stock than there is, never more.
 - Ownership: every hold lookup filters by the signed-in account; another account's hold is "not found" (A-43). A test proves this, and removing the filter makes it fail.
 
+## D-27 Confirmation returns an outcome instead of raising when money was taken
+
+- Chosen: `confirm_booking` returns either a confirmed booking or a failure code with the payment marked `refund_pending`. The caller commits in both cases. It raises only when nothing should be saved (another account's hold, a payment for another hold, a payment that never went through, a lock timeout).
+- Why: when the provider has taken money but no booking can be made, the refund mark must survive. An exception would roll the transaction back and lose it.
+- Rules (from the brief and A-50): an active hold, or an expired hold whose stock is still free, is confirmed; an expired hold whose stock is gone fails. The same payment twice returns the same booking (double submit); a different payment for an already-paid hold is refunded.
+- Locking: allotment rows first, then the hold or booking row, the same order as every other writer (D-21). Hold and payment are reloaded after the locks, since they may have changed while waiting.
+- Booking references: each insert attempt runs in a savepoint, so a duplicate reference only undoes that attempt and the next random reference is tried (D-14). A test forces a collision.
+- Cancellation: allotment rows, then the booking row; `sold` goes down on every night, the payment is marked for refund, and cancelling twice is harmless.
+
+## D-28 Migration 0004: one succeeded payment per hold
+
+- Found: the step 6 tests showed that the payment index from migration 0001 (at most one payment per hold in succeeded, refund_pending or refunded, from A-29) refused to record the refund that A-50 requires for a second payment from another browser tab.
+- Chosen: the partial unique index now covers only `status = 'succeeded'`, the payment that paid for the booking. One booking per hold is still guaranteed by the unique `bookings.hold_id` and `bookings.payment_id`.
+- Why a new migration, not an edit of 0001: 0001 is already merged and applied; migrations are never rewritten once shared.
+

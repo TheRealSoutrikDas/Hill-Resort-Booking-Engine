@@ -36,11 +36,11 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-26 | Auth | Exactly one account carries the GM flag, enforced by a partial unique index. | Confirmed |
 | A-27 | Enquiries | Channels are web, email, whatsapp and phone. Only the web form exists; the others mark seeded or manually logged enquiries. | Confirmed |
 | A-28 | Enquiries | Consent timestamp and version are required for web enquiries only, since other channels never pass through the form. | Confirmed |
-| A-29 | Payments | A hold may have several payment attempts (for example a failure, then a retry), but at most one that captured money. | Confirmed |
+| A-29 | Payments | A hold may have several payment attempts, but at most one that paid for the booking (status succeeded). Extra captured payments are refunded (A-50). Was: at most one that captured money, which contradicted A-50 (see D-28). | Changed |
 | A-30 | Enquiries | Enquiry references are `ENQ-` plus at least 4 digits, matching the client's samples (ENQ-4410). | Confirmed |
 | A-31 | Promo | A promo's valid_from and valid_to dates are inclusive and compared with the booking date in IST. | Confirmed |
 | A-32 | Enquiries | In `sample_enquiries.json`, ENQ-4410 to ENQ-4412 are the client's samples; all others are invented for the demo. ENQ-4422 gained `event_month` 2027-01 (client approved). | Confirmed |
-| A-33 | Payments | A cancelled booking is fully refunded (mock payment status `refunded`); no cancellation fee. | Proposed |
+| A-33 | Payments | A cancelled booking is fully refunded; no cancellation fee. | Confirmed |
 | A-34 | Seed | Every seeded account (demo accounts and booking guests) gets an unusable password marker until stage 4 sets real password hashes. | Proposed |
 | A-35 | Seed | Seeded enquiries get a channel by position (web, email, whatsapp, web, phone, repeating), invented contact details, and are received over the last 72 hours. | Proposed |
 | A-36 | Seed | `--today` lets the seed run as if on a given date, for repeatable demos and tests. | Proposed |
@@ -57,3 +57,7 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-47 | Promo | Promo codes are added to hold creation in step 9; step 5 holds carry no discount. | Confirmed |
 | A-48 | Booking | Lookup by reference plus email stays (brief screen 4) but is view only; cancelling requires signing in as the account that booked. | Proposed |
 | A-49 | Booking | Guest details are checked for shape only: a name, an email in the form name@domain.tld (stored lowercase, not verified), and a phone of 8 to 20 digits and spaces with an optional leading +. | Proposed |
+| A-50 | Payments | When payment was taken but the booking fails (expired hold with stock gone, released hold, missing guest details, or a second payment for an already-paid hold), the payment is marked `refund_pending` and the hold is released so it cannot be retried. | Confirmed |
+| A-51 | Booking | A guest can cancel online until the day before check-in (IST); from check-in day they contact the resort. | Confirmed |
+| A-52 | Payments | Cancelling marks the payment `refund_pending`; the mock provider completes the refund in step 10. | Confirmed |
+| A-53 | Booking | Only the account that made a booking can cancel it; staff cancellations are not part of the brief's admin screens. | Confirmed |
