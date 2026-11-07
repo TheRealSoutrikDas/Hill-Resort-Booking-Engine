@@ -8,9 +8,11 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from alembic import command
 from alembic.config import Config
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Engine, make_url
+from sqlalchemy.orm import Session
 
 from app.core.config import ENV_FILES, normalize_database_url
 from app.db.session import create_db_engine
@@ -58,10 +60,37 @@ def engine(test_database_url: str) -> Iterator[Engine]:
     eng.dispose()
 
 
-@pytest.fixture
-def alembic_config(test_database_url: str) -> Config:
+def make_alembic_config(test_database_url: str) -> Config:
     cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     # configparser treats % as interpolation, so escape it in passwords.
     cfg.set_main_option("sqlalchemy.url", test_database_url.replace("%", "%%"))
     cfg.attributes["configure_logger"] = False
     return cfg
+
+
+@pytest.fixture
+def alembic_config(test_database_url: str) -> Config:
+    return make_alembic_config(test_database_url)
+
+
+@pytest.fixture(scope="session")
+def schema(test_database_url: str, engine: Engine) -> Engine:
+    """Rebuild the test schema from migrations once per run, so tests always see
+    exactly what `alembic upgrade head` produces (not what the models claim)."""
+    cfg = make_alembic_config(test_database_url)
+    command.downgrade(cfg, "base")
+    command.upgrade(cfg, "head")
+    return engine
+
+
+@pytest.fixture
+def db(schema: Engine) -> Iterator[Session]:
+    """A session inside a transaction that is rolled back after the test."""
+    with schema.connect() as conn:
+        trans = conn.begin()
+        session = Session(bind=conn, join_transaction_mode="create_savepoint")
+        try:
+            yield session
+        finally:
+            session.close()
+            trans.rollback()
