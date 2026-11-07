@@ -20,7 +20,7 @@ INTEGRATION_DIR = BACKEND_DIR / "tests" / "integration"
 
 
 class _TestSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_FILES, extra="ignore")
+    model_config = SettingsConfigDict(env_file=ENV_FILES, env_ignore_empty=True, extra="ignore")
 
     test_database_url: str | None = None
 
