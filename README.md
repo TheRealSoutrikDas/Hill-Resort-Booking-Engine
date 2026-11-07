@@ -30,7 +30,31 @@ docker-compose.yml
 
 ## Local setup
 
-To be written (stage 1, step 2).
+Needs Docker, Python 3.12 or newer, and (from stage 6) Node 22.
+
+```bash
+cp .env.example .env        # fill in POSTGRES_*, DATABASE_URL and TEST_DATABASE_URL
+docker compose up -d        # Postgres 16 on 127.0.0.1:5432, plus <POSTGRES_DB>_test
+cd backend
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+alembic upgrade head
+```
+
+Example `.env` values for local development only:
+
+```
+POSTGRES_USER=resort
+POSTGRES_PASSWORD=resort_dev
+POSTGRES_DB=resort
+DATABASE_URL=postgresql+psycopg://resort:resort_dev@localhost:5432/resort
+TEST_DATABASE_URL=postgresql+psycopg://resort:resort_dev@localhost:5432/resort_test
+```
+
+The test database is created only on the first start of an empty volume. If you
+started Postgres before this existed, reset it with `docker compose down -v`
+(this deletes local data).
 
 ## Seed data
 
@@ -38,7 +62,16 @@ To be written (stage 1, step 2).
 
 ## Tests
 
-To be written.
+Run from `backend/`:
+
+```bash
+pytest                        # everything; integration tests need TEST_DATABASE_URL
+pytest -m "not integration"   # unit tests only, no database
+ruff check . && ruff format --check .
+```
+
+Integration tests run against real PostgreSQL and refuse any database whose name
+does not end in `_test`.
 
 ## Enquiry evaluation
 
