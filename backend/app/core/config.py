@@ -7,7 +7,7 @@ In production the hosting provider sets real environment variables and no .env f
 from functools import lru_cache
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_FILES = ("../.env", ".env")
@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     business_timezone: str = "Asia/Kolkata"
     log_level: str = "INFO"
 
+    # GST on room nights (A-08). Tested per room per night on the price actually charged:
+    # at or below the threshold the low rate applies, above it the high rate.
+    # Rates are in basis points (500 = 5%). Verify against current CBIC notifications.
+    gst_slab_threshold_paise: int = Field(default=750_000, gt=0)
+    gst_rate_low_bp: int = Field(default=500, ge=0, le=10_000)
+    gst_rate_high_bp: int = Field(default=1_800, ge=0, le=10_000)
+
     @field_validator("database_url")
     @classmethod
     def _normalize_database_url(cls, value: str) -> str:
@@ -49,6 +56,12 @@ class Settings(BaseSettings):
         except (ZoneInfoNotFoundError, ValueError) as exc:
             raise ValueError(f"Unknown timezone: {value}") from exc
         return value
+
+    @model_validator(mode="after")
+    def _check_gst_rates(self) -> "Settings":
+        if self.gst_rate_low_bp > self.gst_rate_high_bp:
+            raise ValueError("gst_rate_low_bp must not exceed gst_rate_high_bp")
+        return self
 
 
 @lru_cache

@@ -11,7 +11,7 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-05 | Tooling | Lint with ruff (backend) and the Next.js ESLint config (frontend). | Confirmed |
 | A-06 | Workflow | The initial skeleton commit goes straight to `main`; all later work uses feature branches and PRs. | Confirmed |
 | A-07 | AI | LLM provider and model. Proposed in stage 5. | Open |
-| A-08 | Pricing | GST slab thresholds and rounding rule. Proposed in stage 3. | Open |
+| A-08 | Pricing | GST per room per night on the value actually charged (after promo discount): at or below Rs 7,500 is 5%, above is 18% (Notification 15/2025-CT(Rate), from 22 Sep 2025). Exactly Rs 7,500 is 5%. No exempt slab below Rs 1,000. Breakfast on the B&B plan is part of the room value. Discount and GST are rounded half up to the paise, once per unit-night. Threshold and rates are config values. | Proposed, client to verify the after-discount basis |
 | A-09 | Seed | Room types, rate plans, rates, allotment fraction, blackout dates, promo codes, booking count. Proposed in stage 1, step 3. | Open |
 | A-10 | Export | Brief's column layout, one CSV row per booking line, plus a `line_number` column. `booking_id` repeats across a booking's lines; amount and tax columns are per line. | Confirmed |
 | A-11 | Auth | Browser calls the API through Next.js rewrites so the session cookie is first-party. | Open, confirm before stage 4 |
@@ -33,9 +33,9 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-23 | Tooling | Direct dependencies are pinned exactly; transitive ones are not locked. A lock file is a possible later step. | Proposed |
 | A-24 | Tooling | New dependency versions must be at least two weeks old when added. | Proposed |
 | A-25 | Booking | At most 4 units per booking (`MAX_UNITS_PER_BOOKING`, enforced in the service). Larger groups use the enquiry form. | Confirmed |
-| A-26 | Auth | Exactly one account carries the GM flag, enforced by a partial unique index. | Proposed |
-| A-27 | Enquiries | Channels are web, email, whatsapp and phone. Only the web form exists; the others mark seeded or manually logged enquiries. | Proposed |
-| A-28 | Enquiries | Consent timestamp and version are required for web enquiries only, since other channels never pass through the form. | Proposed |
-| A-29 | Payments | A hold may have several payment attempts (for example a failure, then a retry), but at most one that captured money. | Proposed |
-| A-30 | Enquiries | Enquiry references are `ENQ-` plus at least 4 digits, matching the client's samples (ENQ-4410). | Proposed |
-| A-31 | Promo | A promo's valid_from and valid_to dates are inclusive and compared with the booking date in IST. | Proposed |
+| A-26 | Auth | Exactly one account carries the GM flag, enforced by a partial unique index. | Confirmed |
+| A-27 | Enquiries | Channels are web, email, whatsapp and phone. Only the web form exists; the others mark seeded or manually logged enquiries. | Confirmed |
+| A-28 | Enquiries | Consent timestamp and version are required for web enquiries only, since other channels never pass through the form. | Confirmed |
+| A-29 | Payments | A hold may have several payment attempts (for example a failure, then a retry), but at most one that captured money. | Confirmed |
+| A-30 | Enquiries | Enquiry references are `ENQ-` plus at least 4 digits, matching the client's samples (ENQ-4410). | Confirmed |
+| A-31 | Promo | A promo's valid_from and valid_to dates are inclusive and compared with the booking date in IST. | Confirmed |

@@ -93,3 +93,14 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 
 - Chosen: `alembic revision --autogenerate`, then a hand review; a test compares the migrated schema with the models and fails on any difference. `alembic check` does the same from the command line.
 - Why: a model change without a migration (or the reverse) is caught before merge. The comparison covers tables, columns, types, indexes, unique constraints and foreign keys; CHECK constraints are not compared by Alembic, so the constraint tests cover them.
+
+## D-17 Pricing is calculated per unit per night in integer paise
+
+- Chosen: pure functions in `app/services/pricing.py`. Each unit-night gets its discount, taxable value, GST rate and GST; line and stay totals are sums of those, multiplied by units. Rounding is half up to the paise with integer arithmetic.
+- Why: GST is tested per room per night, so per unit-night is the natural unit. Because every total is an exact sum, `total = subtotal - discount + tax` always holds, which the database also enforces.
+- Rejected: rounding once on the stay total (would hide which slab each night used), floating point (rounding drift).
+
+## D-18 Pricing core built before the seed
+
+- Chosen: the pure pricing functions and the reference generator moved from stage 3 into step 3a.
+- Why: the seed creates paid bookings, and their amounts must come from the real pricing rules, never from guessed numbers. Promo validity rules and the API stay in stage 3.

@@ -4,6 +4,7 @@ These constraints are a backstop: the services check the same rules first, but a
 in service code still cannot oversell, double-book or store inconsistent money.
 """
 
+import random
 import uuid
 from datetime import UTC, date, datetime, timedelta
 
@@ -25,6 +26,7 @@ from app.db.models import (
     RoomType,
     User,
 )
+from app.services.references import generate_booking_reference
 
 STAY = date(2027, 2, 12)
 NOW = datetime(2026, 11, 7, 10, 0, tzinfo=UTC)
@@ -206,6 +208,13 @@ def test_booking_reference_format_is_enforced(db: Session, reference: str) -> No
     h = hold(db)
     with pytest.raises(IntegrityError):
         booking(db, h, payment(db, h), reference=reference)
+
+
+def test_generated_references_pass_the_database_format_check(db: Session) -> None:
+    rng = random.Random(1)
+    for _ in range(20):
+        h = hold(db)
+        booking(db, h, payment(db, h), reference=generate_booking_reference(rng))
 
 
 def test_cancelled_booking_needs_cancelled_at(db: Session) -> None:
