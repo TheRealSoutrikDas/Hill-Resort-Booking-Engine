@@ -67,7 +67,9 @@ curl localhost:8000/health                        # {"status":"ok","database":"o
 
 Interactive API docs are at `http://localhost:8000/docs`. Public routes:
 `GET /api/rooms`, `GET /api/rooms/{code}`, `POST /api/quotes`, `POST /api/bookings/lookup`.
-All amounts are integer paise. Logs are JSON lines on
+All amounts are integer paise. Signed-in guest routes: `POST /api/holds`,
+`PUT /api/holds/{id}/guest`, `POST /api/holds/{id}/payment` (needs an `Idempotency-Key`
+header), `GET /api/bookings/{reference}`, `POST /api/bookings/{reference}/cancel`. Logs are JSON lines on
 stdout and never contain personal data.
 
 ## Demo logins
