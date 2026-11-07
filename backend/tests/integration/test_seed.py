@@ -13,6 +13,7 @@ from app.db.models import (
     Booking,
     DailyRate,
     Enquiry,
+    Hold,
     HoldItemNight,
     Payment,
     PromoCode,
@@ -232,12 +233,14 @@ def test_promo_codes_cover_valid_expired_and_capped(seeded: Session) -> None:
 
 def test_demo_accounts(seeded: Session) -> None:
     users = {u.email: u for u in seeded.scalars(select(User))}
-    assert set(users) == {u.email for u in plan.USERS}
+    assert {u.email for u in plan.USERS} <= set(users)
     assert users["gm@example.com"].is_gm and users["gm@example.com"].team is None
     assert {users[e].team for e in ("reservations@example.com", "events@example.com")} == {
         "reservations",
         "events",
     }
+    staff = {u.email for u in users.values() if u.role == "staff"}
+    assert staff == {"reservations@example.com", "events@example.com", "gm@example.com"}
     assert all(u.password_hash == plan.UNUSABLE_PASSWORD_HASH for u in users.values())
 
     guest_bookings = seeded.scalars(
@@ -248,6 +251,18 @@ def test_demo_accounts(seeded: Session) -> None:
         for b in guest_bookings
     )
     assert kinds == ["cancelled", "past", "upcoming"]
+
+
+def test_every_booking_belongs_to_a_guest_account(seeded: Session) -> None:
+    """Signing in is required to book (A-43): each invented booking guest has an account."""
+    for booking in seeded.scalars(select(Booking)):
+        account = seeded.get(User, booking.user_id)
+        assert account.role == "guest"
+        assert account.email == booking.guest_email
+        hold_owner = seeded.scalar(select(Hold.user_id).where(Hold.id == booking.hold_id))
+        assert hold_owner == booking.user_id
+    guests = seeded.scalar(select(func.count()).select_from(User).where(User.role == "guest"))
+    assert guests == 1 + 37  # the demo guest plus one per invented booking guest
 
 
 def test_all_personal_data_is_obviously_fake(seeded: Session) -> None:
