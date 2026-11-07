@@ -66,7 +66,8 @@ class Hold(Base):
     )
     check_in: Mapped[date] = mapped_column(Date)
     check_out: Mapped[date] = mapped_column(Date)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    # Signing in is required to book (A-43): every hold belongs to an account.
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     # Filled in at the guest details step, before payment.
     guest_name: Mapped[str | None] = mapped_column(String(120))
     guest_email: Mapped[str | None] = mapped_column(String(254))
@@ -177,8 +178,7 @@ class Payment(Base):
 
 
 class Booking(Base):
-    """A confirmed (or later cancelled) booking. Guest details are stored on the booking
-    whether or not the guest has an account."""
+    """A confirmed (or later cancelled) booking, owned by the account that made it."""
 
     __tablename__ = "bookings"
     __table_args__ = (
@@ -199,7 +199,9 @@ class Booking(Base):
     # One booking per hold and per payment: a double-submitted payment cannot create two.
     hold_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("holds.id"), unique=True)
     payment_id: Mapped[int] = mapped_column(ForeignKey("payments.id"), unique=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
+    # The account that booked (A-43). The guest_* fields below can name someone else,
+    # for example when booking for family.
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     check_in: Mapped[date] = mapped_column(Date)
     check_out: Mapped[date] = mapped_column(Date)
     guest_name: Mapped[str] = mapped_column(String(120))

@@ -1,3 +1,4 @@
+import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
@@ -53,3 +54,25 @@ def test_models_match_migrations(schema: Engine) -> None:
         context = MigrationContext.configure(conn, opts={"compare_type": True})
         diff = compare_metadata(context, Base.metadata)
     assert diff == []
+
+
+def test_require_account_migration_refuses_rows_without_an_account(
+    alembic_config: Config, schema: Engine
+) -> None:
+    """Migration 0003 must stop with instructions, not guess an owner (A-43)."""
+    command.downgrade(alembic_config, "0002")
+    try:
+        with schema.begin() as conn:
+            conn.execute(
+                text(
+                    "INSERT INTO holds (check_in, check_out, subtotal_paise, tax_paise,"
+                    " total_paise, expires_at)"
+                    " VALUES ('2027-02-12', '2027-02-13', 100, 5, 105, now())"
+                )
+            )
+        with pytest.raises(RuntimeError, match="1 holds have no user_id"):
+            command.upgrade(alembic_config, "head")
+    finally:
+        with schema.begin() as conn:
+            conn.execute(text("DELETE FROM holds"))
+        command.upgrade(alembic_config, "head")
