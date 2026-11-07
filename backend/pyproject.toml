@@ -29,6 +29,10 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
+[tool.ruff.lint.per-file-ignores]
+# Migrations carry long SQL strings for CHECK constraints; wrapping them hurts reading.
+"alembic/versions/*" = ["E501"]
+
 [tool.ruff.lint.isort]
 # The local alembic/ migrations folder would otherwise make ruff treat the alembic
 # package as first-party.
