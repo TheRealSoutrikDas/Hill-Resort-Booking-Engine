@@ -29,6 +29,17 @@ from app.services.errors import NotAvailable, Shortfall, StockLocked
 # Postgres error code for "lock_timeout expired" (lock_not_available).
 _LOCK_NOT_AVAILABLE = "55P03"
 
+
+def set_lock_timeout(session: Session, lock_timeout_ms: int) -> None:
+    """Limit how long this transaction waits for a row lock (A-41)."""
+    # SET does not accept bind parameters; int() keeps the value safe to interpolate.
+    session.execute(text(f"SET LOCAL lock_timeout = {int(lock_timeout_ms)}"))
+
+
+def is_lock_timeout(exc: OperationalError) -> bool:
+    return getattr(exc.orig, "sqlstate", None) == _LOCK_NOT_AVAILABLE
+
+
 Key = tuple[int, date]  # (room_type_id, stay_date)
 
 
@@ -120,8 +131,7 @@ def lock_allotments(
     Raises StockLocked if another transaction holds a lock past the timeout; the caller
     must then roll back.
     """
-    # SET does not accept bind parameters; int() keeps the value safe to interpolate.
-    session.execute(text(f"SET LOCAL lock_timeout = {int(lock_timeout_ms)}"))
+    set_lock_timeout(session, lock_timeout_ms)
     stmt = (
         select(Allotment)
         .where(
@@ -136,7 +146,7 @@ def lock_allotments(
     try:
         rows = session.scalars(stmt).all()
     except OperationalError as exc:
-        if getattr(exc.orig, "sqlstate", None) == _LOCK_NOT_AVAILABLE:
+        if is_lock_timeout(exc):
             raise StockLocked("Stock is busy, please try again.") from exc
         raise
     return {(row.room_type_id, row.stay_date): row for row in rows}

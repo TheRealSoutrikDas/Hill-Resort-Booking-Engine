@@ -78,3 +78,12 @@ class CancellationNotAllowed(DomainError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class InvalidPromoCode(DomainError):
+    """The promo code cannot be used. `code` says why (A-58: being specific is fine,
+    promo codes are not secrets)."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
