@@ -56,3 +56,4 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-46 | Booking | An inactive rate plan cannot be booked, even if rates exist for it. | Confirmed |
 | A-47 | Promo | Promo codes are added to hold creation in step 9; step 5 holds carry no discount. | Confirmed |
 | A-48 | Booking | Lookup by reference plus email stays (brief screen 4) but is view only; cancelling requires signing in as the account that booked. | Proposed |
+| A-49 | Booking | Guest details are checked for shape only: a name, an email in the form name@domain.tld (stored lowercase, not verified), and a phone of 8 to 20 digits and spaces with an optional leading +. | Proposed |
