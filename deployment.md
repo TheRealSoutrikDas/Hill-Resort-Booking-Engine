@@ -30,9 +30,35 @@ To be written.
 
 `GET /health` on the backend.
 
+## Run exactly one backend instance with one worker
+
+Two things keep state in the backend process's memory:
+
+- the rate limiter (A-82, D-34): several workers or instances would each count
+  separately, multiplying the limits, and a restart resets the counts;
+- the mock payment gateway's idempotency memory (D-31).
+
+So run one instance with one worker, and turn off autoscaling:
+
+```bash
+uvicorn app.main:create_app --factory --host 0.0.0.0 --port "$PORT" --workers 1
+```
+
+A shared store (Redis) is the usual fix and is out of scope (brief). Storing the counts
+in Postgres would also work, at the cost of a database write per attempt.
+
+## Client IPs behind the proxy (A-81)
+
+Browser traffic reaches the backend through the Next.js proxy, so the backend must take
+the client's IP from `X-Forwarded-For`, but only when the request comes from the proxy.
+Uvicorn does this when `FORWARDED_ALLOW_IPS` lists the proxy's address. Its default is
+this machine only (`127.0.0.1,::1`), which suits local development. In production set
+it to the proxy's address; never to `*` unless the backend is unreachable except
+through the proxy. Without it, every guest shares the proxy's IP and one rate limit.
+
 ## Known limits
 
-- Rate limiting is in-memory, so limits apply per instance when more than one backend instance runs.
+- Rate limits and the mock gateway's idempotency memory are per process (above).
 
 ## Rollback
 

@@ -60,6 +60,19 @@ class Settings(BaseSettings):
     session_ttl_hours: int = Field(default=168, gt=0)
     session_cookie_secure: bool = True
 
+    # Rate limits (A-79): attempts allowed per window, in seconds. In memory, per process
+    # (A-82). The login email limit counts failed attempts only (A-80).
+    rate_login_per_ip: int = Field(default=20, gt=0)
+    rate_login_per_ip_window_s: int = Field(default=900, gt=0)
+    rate_login_failures_per_email: int = Field(default=5, gt=0)
+    rate_login_failures_window_s: int = Field(default=900, gt=0)
+    rate_signup_per_ip: int = Field(default=5, gt=0)
+    rate_signup_per_ip_window_s: int = Field(default=3600, gt=0)
+    rate_lookup_per_ip: int = Field(default=10, gt=0)
+    rate_lookup_per_ip_window_s: int = Field(default=900, gt=0)
+    rate_enquiry_per_ip: int = Field(default=10, gt=0)
+    rate_enquiry_per_ip_window_s: int = Field(default=3600, gt=0)
+
     # Payment gateway adapter. Only the mock exists; payments are simulated (brief).
     payment_provider: Literal["mock"] = "mock"
 

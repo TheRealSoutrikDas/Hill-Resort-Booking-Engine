@@ -86,3 +86,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-76 | Auth | Login gives one message for a wrong email or password, and an unknown email still costs a full verification against a dummy hash. | Confirmed |
 | A-77 | Auth | Booking routes are guest-only; staff routes need the staff role (and optionally a team, which the GM also passes); GM routes need the GM flag. Not signed in is 401; not allowed is 403. | Confirmed |
 | A-78 | Seed | The four demo accounts get documented passwords (README); the 37 booking-guest accounts cannot log in. | Confirmed |
+| A-79 | Rate limits | Login 20 per 15 min per IP; failed logins 5 per 15 min per email; sign-up 5 per hour per IP; booking lookup 10 per 15 min per IP; enquiries 10 per hour per IP. All settings. Refusals are 429 with Retry-After. | Confirmed |
+| A-80 | Rate limits | The per-email login limit counts failed attempts only, keyed by a hash of the email, and is cleared by a correct login. While it is reached, even the right password is refused. | Confirmed |
+| A-81 | Rate limits | The client IP comes from uvicorn's proxy-header support, which believes X-Forwarded-For only from addresses in `FORWARDED_ALLOW_IPS` (default: this machine only). Production sets it to the proxy's address. To be verified with the frontend. | Confirmed |
+| A-82 | Deployment | Rate limits (and the mock gateway's key memory) are per process, so the backend runs as one instance with one worker (deployment.md). | Confirmed |
+| A-83 | Logging | A refused attempt is logged with the route and limit name only, never the IP or email. Alternative offered: also log a daily-salted hash of the IP so attacks can be traced to one source. | Proposed, option (a) built |

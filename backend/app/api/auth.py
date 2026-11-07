@@ -1,10 +1,11 @@
 """Sign-up, login, logout and the current user (A-75 to A-77)."""
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.deps import AppSettings, DbSession
 from app.api.errors import ErrorResponse
+from app.api.ratelimit import LoginFailures, limit_per_ip
 from app.api.security import (
     SESSION_COOKIE,
     CurrentUser,
@@ -15,7 +16,7 @@ from app.api.security import (
 from app.core.clock import utc_now
 from app.db.models import User
 from app.services import auth as auth_service
-from app.services.errors import NotAuthenticated
+from app.services.errors import InvalidCredentials, NotAuthenticated
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -76,7 +77,12 @@ def _start(request: Request, response: Response, db: DbSession, user: User, sett
     "/signup",
     status_code=201,
     response_model=Me,
-    responses={409: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
+    responses={
+        409: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+    },
+    dependencies=[Depends(limit_per_ip("signup"))],
 )
 def signup(
     body: SignupIn, request: Request, response: Response, db: DbSession, settings: AppSettings
@@ -94,12 +100,25 @@ def signup(
     return _start(request, response, db, user, settings)
 
 
-@router.post("/login", response_model=Me, responses={401: {"model": ErrorResponse}})
+@router.post(
+    "/login",
+    response_model=Me,
+    responses={401: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
+    dependencies=[Depends(limit_per_ip("login"))],
+)
 def login(
     body: LoginIn, request: Request, response: Response, db: DbSession, settings: AppSettings
 ) -> Me:
-    """One error for a wrong email or a wrong password."""
-    user = auth_service.authenticate(db, email=body.email, password=body.password)
+    """One error for a wrong email or a wrong password. Five failures for one email
+    lock it for a while, even from different IPs (A-80)."""
+    failures = LoginFailures(request, body.email)
+    failures.check()  # before verifying, so a locked email cannot be guessed at all
+    try:
+        user = auth_service.authenticate(db, email=body.email, password=body.password)
+    except InvalidCredentials:
+        failures.failed()
+        raise
+    failures.succeeded()
     return _start(request, response, db, user, settings)
 
 

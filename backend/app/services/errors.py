@@ -123,3 +123,11 @@ class InvalidSignup(DomainError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class RateLimited(DomainError):
+    """Too many attempts. `retry_after` is how many seconds to wait."""
+
+    def __init__(self, retry_after: int) -> None:
+        super().__init__("Too many attempts. Please wait a little and try again.")
+        self.retry_after = retry_after

@@ -86,6 +86,9 @@ The API signs users in with an HttpOnly session cookie. State-changing requests 
 signed-in browser must send the CSRF token from `GET /api/auth/me` in `X-CSRF-Token`,
 and must come from an origin listed in `CORS_ORIGINS`.
 
+Login, sign-up, booking lookup and enquiries are rate limited per client (in memory;
+see deployment.md for why the backend runs as a single instance).
+
 ## Seed data
 
 Run from `backend/` after `alembic upgrade head`:

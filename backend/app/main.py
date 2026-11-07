@@ -23,6 +23,7 @@ from app.api.errors import error_response, register_error_handlers
 from app.api.security import OriginCheckMiddleware
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, exception_fields, request_id_var, safe_request_id
+from app.core.ratelimit import SlidingWindowLimiter
 from app.db.session import create_db_engine
 
 logger = logging.getLogger("app.access")
@@ -86,6 +87,8 @@ def create_app(
     app.state.settings = settings
     app.state.session_factory = session_factory
     app.state.engine = session_factory.kw["bind"]
+    # One limiter per app: counts live in this process (A-82).
+    app.state.limiter = SlidingWindowLimiter()
 
     # Added first, so it sits inside the request middleware (the last one added is outermost).
     app.add_middleware(
