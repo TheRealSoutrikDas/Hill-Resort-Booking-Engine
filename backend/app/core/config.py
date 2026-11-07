@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     # How long a booking waits for another booking's row lock before giving up.
     lock_timeout_ms: int = Field(default=5_000, gt=0)
 
+    # Sign-in sessions (A-72, A-73). Secure cookies work on http://localhost in modern
+    # browsers, so this stays on in development too; set it to false only for plain-HTTP
+    # hosts other than localhost.
+    session_ttl_hours: int = Field(default=168, gt=0)
+    session_cookie_secure: bool = True
+
     # Payment gateway adapter. Only the mock exists; payments are simulated (brief).
     payment_provider: Literal["mock"] = "mock"
 
