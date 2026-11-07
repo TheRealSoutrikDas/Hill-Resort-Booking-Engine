@@ -13,7 +13,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.db.models import Booking, Hold, Payment
+from app.db.models import Booking, Hold, Payment, PromoCode
 from app.services.bookings import (
     HOLD_ALREADY_PAID,
     HOLD_EXPIRED_SOLD_OUT,
@@ -21,7 +21,7 @@ from app.services.bookings import (
     cancel_booking,
     confirm_booking,
 )
-from app.services.errors import NotAvailable
+from app.services.errors import InvalidPromoCode, NotAvailable
 from app.services.holds import HoldLineRequest, HoldRequest, create_hold, set_guest_details
 from tests.factories import (
     NOW,
@@ -32,6 +32,7 @@ from tests.factories import (
     daily_rate,
     guest,
     line,
+    promo,
     rate_plan,
     request,
     room_type,
@@ -333,4 +334,43 @@ def test_cancelling_the_last_unit_while_others_book(committed, round_) -> None:
     assert outcomes[0].error is None
     assert sum(o.error is None for o in outcomes[1:]) <= 1  # at most one takes the freed unit
     assert count(committed, Booking, Booking.status == "confirmed") == 0
+    check_stock(committed)
+
+
+# ---------- 7. ten guests, one last promo use ----------
+
+
+def test_ten_guests_one_last_promo_use(committed, round_) -> None:
+    """Each guest books a different night, so no allotment row is shared: the promo row
+    lock alone must stop two guests taking the last use."""
+    with committed() as s, s.begin():
+        rt, rp = room_type(s, "DLX"), rate_plan(s, "RO")
+        nights = [STAY + timedelta(days=i) for i in range(GUESTS)]
+        for night in nights:
+            allotment(s, rt, night, 1)
+            daily_rate(s, rt, rp, night, 600_000)
+        promo(s, "COFFEE20", 20, max_uses=5, used_count=4)
+        users = [guest(s).id for _ in range(GUESTS)]
+
+    def hold_with_code(s: Session, user_id: int, night: date):
+        with s.begin():
+            return create_hold(
+                s, user_id, stay(rt, rp, night, 1), now=NOW, rules=RULES, promo_code="COFFEE20"
+            )
+
+    outcomes = run_in_parallel(
+        committed,
+        [lambda s, u=u, n=n: hold_with_code(s, u, n) for u, n in zip(users, nights, strict=True)],
+    )
+
+    unexpected = [e for e in errors(outcomes) if not isinstance(e, InvalidPromoCode)]
+    assert not unexpected, unexpected
+    assert {e.code for e in errors(outcomes)} <= {"promo_used_up"}
+    assert sum(o.error is None for o in outcomes) == 1
+    with committed() as s:
+        code = s.scalar(select(PromoCode).where(PromoCode.code == "COFFEE20"))
+        reserved = s.scalar(
+            select(func.count()).select_from(Hold).where(Hold.promo_code_id == code.id)
+        )
+        assert code.used_count + reserved <= code.max_uses
     check_stock(committed)

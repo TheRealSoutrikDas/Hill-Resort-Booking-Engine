@@ -1,7 +1,8 @@
 """Phase 2 of a booking: turn a paid hold into a confirmed booking, and cancel bookings.
 
 Lock order for every write here: the allotment rows first (via the availability
-service, ordered by room type and date), then the hold or booking row. Every writer
+service, ordered by room type and date), then the promo row if the hold used a code,
+then the hold or booking row. Every writer
 uses the same order, so they queue instead of deadlocking (D-21).
 
 `confirm_booking` starts after the payment provider has captured the money (the mock
@@ -33,6 +34,7 @@ from app.services.errors import (
     PaymentMismatch,
 )
 from app.services.holds import HoldRules, get_owned_hold
+from app.services.promos import lock_promo, uses_left
 from app.services.references import (
     MAX_REFERENCE_ATTEMPTS,
     generate_booking_reference,
@@ -46,6 +48,7 @@ HOLD_RELEASED = "hold_released"
 HOLD_ALREADY_PAID = "hold_already_paid"
 GUEST_DETAILS_MISSING = "guest_details_missing"
 PAYMENT_ALREADY_REFUNDED = "payment_already_refunded"
+PROMO_USED_UP = "promo_used_up"
 
 
 @dataclass(frozen=True)
@@ -161,7 +164,13 @@ def confirm_booking(
     except NotAvailable as exc:  # the rows are still locked; decide below
         shortage, rows = exc, {}
 
-    # 2. Then the hold row. Reload hold and payment: they may have changed while we waited.
+    # 2. Then the promo row, if the hold used a code (D-30). Leaving this hold out of the
+    #    count answers "is a use still free for it?", like the stock check above.
+    promo = None
+    if hold.promo_code_id is not None:
+        promo = lock_promo(session, hold.promo_code_id, rules.lock_timeout_ms)
+
+    # 3. Then the hold row. Reload hold and payment: they may have changed while we waited.
     hold = get_owned_hold(session, user_id, hold_id, lock=True)
     payment = session.get(Payment, payment_id, populate_existing=True)
     if payment is None or payment.hold_id != hold.id:
@@ -171,7 +180,7 @@ def confirm_booking(
     if payment.status in (PaymentStatus.REFUND_PENDING, PaymentStatus.REFUNDED):
         return ConfirmOutcome(booking=None, failure=PAYMENT_ALREADY_REFUNDED)
 
-    # 3. Already paid? The same payment again is a double submit: return the booking.
+    # 4. Already paid? The same payment again is a double submit: return the booking.
     existing = session.scalar(select(Booking).where(Booking.hold_id == hold.id))
     if existing is not None:
         if existing.payment_id == payment.id:
@@ -187,11 +196,18 @@ def confirm_booking(
         return _fail(
             hold, payment, HOLD_EXPIRED_SOLD_OUT if expired else STOCK_UNAVAILABLE, now, session
         )
+    if promo is not None:
+        left = uses_left(session, promo, now, exclude_hold_id=hold.id)
+        if left is not None and left <= 0:  # A-56: an expired hold lost its reserved use
+            return _fail(hold, payment, PROMO_USED_UP, now, session)
 
-    # 4. Confirm: sell the units, close the hold, record the payment, create the booking.
+    # 5. Confirm: sell the units, count the promo use, close the hold, record the
+    #    payment, create the booking.
     for item in hold.items:
         for night in nights:
             rows[(item.room_type_id, night)].sold += item.units
+    if promo is not None:
+        promo.used_count += 1  # A-20: counted on confirmation
     hold.status = HoldStatus.CONVERTED
     payment.status = PaymentStatus.SUCCEEDED
     payment.updated_at = now
