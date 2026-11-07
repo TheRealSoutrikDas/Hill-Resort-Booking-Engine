@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.db.models import (
     Allotment,
     Booking,
+    DailyRate,
     Hold,
     HoldItem,
     HoldItemNight,
@@ -34,11 +35,20 @@ def room_type(
     return rt
 
 
-def rate_plan(db: Session, code: str = "RO") -> RatePlan:
-    rp = RatePlan(code=code, name="Room only")
+def rate_plan(db: Session, code: str = "RO", is_active: bool = True) -> RatePlan:
+    rp = RatePlan(code=code, name=f"{code} plan", is_active=is_active)
     db.add(rp)
     db.flush()
     return rp
+
+
+def daily_rate(db: Session, rt: RoomType, rp: RatePlan, night: date, price_paise: int) -> DailyRate:
+    row = DailyRate(
+        room_type_id=rt.id, rate_plan_id=rp.id, stay_date=night, price_paise=price_paise
+    )
+    db.add(row)
+    db.flush()
+    return row
 
 
 def allotment(
