@@ -12,6 +12,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_FILES = ("../.env", ".env")
 
+# Shared with the seed plan, which must follow the same rule (A-25).
+DEFAULT_MAX_UNITS_PER_BOOKING = 4
+
 _POSTGRES_PREFIXES = ("postgres://", "postgresql://", "postgresql+psycopg://")
 
 
@@ -36,11 +39,14 @@ class Settings(BaseSettings):
     business_timezone: str = "Asia/Kolkata"
     log_level: str = "INFO"
 
-    # Booking rules (A-38, A-39, A-41).
+    # Booking rules (A-25, A-38, A-39, A-41).
     # Check-in may be any day from today up to booking_horizon_days - 1 days ahead,
     # so the window is booking_horizon_days days long including today.
     booking_horizon_days: int = Field(default=180, gt=0)
     max_stay_nights: int = Field(default=14, gt=0)
+    max_units_per_booking: int = Field(default=DEFAULT_MAX_UNITS_PER_BOOKING, gt=0)
+    # How long a hold keeps stock reserved while the guest completes checkout.
+    hold_ttl_minutes: int = Field(default=10, gt=0)
     # How long a booking waits for another booking's row lock before giving up.
     lock_timeout_ms: int = Field(default=5_000, gt=0)
 

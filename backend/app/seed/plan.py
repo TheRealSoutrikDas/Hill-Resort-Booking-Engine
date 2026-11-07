@@ -7,6 +7,7 @@ current. The same today always produces the same data (fixed random seed).
 from dataclasses import dataclass
 from datetime import date, timedelta
 
+from app.core.config import DEFAULT_MAX_UNITS_PER_BOOKING
 from app.services.pricing import round_half_up_div
 
 RANDOM_SEED = 42
@@ -172,7 +173,7 @@ CANCELLED_BOOKINGS = 4
 CONFIRMED_YESTERDAY = 3  # so yesterday's export has confirmations
 CANCELLED_YESTERDAY = 1  # and a cancellation
 BB_SHARE_PERCENT = 40
-MAX_UNITS_PER_BOOKING = 4  # A-25
+MAX_UNITS_PER_BOOKING = DEFAULT_MAX_UNITS_PER_BOOKING  # A-25, same rule as the app
 
 # ---------- promo codes ----------
 
