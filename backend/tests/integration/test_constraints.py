@@ -104,12 +104,20 @@ def test_idempotency_key_is_unique(db: Session) -> None:
         payment(db, h, key="checkout-abc", status="pending")
 
 
-def test_failed_attempts_allowed_but_only_one_captured_payment_per_hold(db: Session) -> None:
+def test_failed_attempts_allowed_but_only_one_succeeded_payment_per_hold(db: Session) -> None:
     h = hold(db)
     payment(db, h, status="failed")
     payment(db, h, status="succeeded")
     with pytest.raises(IntegrityError):
         payment(db, h, status="succeeded")
+
+
+def test_extra_captured_payments_can_be_refunded(db: Session) -> None:
+    # A second payment from another tab is captured, then marked for refund (A-50).
+    h = hold(db)
+    payment(db, h, status="succeeded")
+    payment(db, h, status="refund_pending")
+    payment(db, h, status="refunded")
 
 
 def test_one_booking_per_hold(db: Session) -> None:
