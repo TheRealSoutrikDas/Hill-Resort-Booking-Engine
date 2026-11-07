@@ -136,3 +136,21 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Chosen: `backend/tests/factories.py` holds small row builders used by all integration tests; pytest puts `backend/` on the import path (`pythonpath`).
 - Why: steps 4 to 7 need the same rooms, allotments and holds; one copy keeps the tests short and consistent.
 
+## D-24 Signing in is required to book (scope change from the brief)
+
+- Chosen: by client decision, a guest must be signed in to start a booking. The brief allowed guest checkout without an account.
+- Why: the client sees an account as the standard security for a booking system, and wants every booking tied to an owner.
+- Trade-offs accepted: forced sign-up can lower checkout conversion, which works against the direct-share goal (12% to 20%). Without email verification (out of scope), an account does not prove the guest owns the email. Mitigation: the frontend sends a signed-out guest to login or sign-up and straight back to the selected rooms.
+- Alternative considered: guest checkout with the hold bound to an httpOnly cookie token, which gives most of the protection without sign-up friction.
+- Consequences:
+  - `holds.user_id` and `bookings.user_id` are NOT NULL (migration 0003).
+  - The seed gives every invented booking guest an account.
+  - Auth (stage 4) is built before the booking APIs (steps 12 and 13).
+  - Lookup by reference plus email becomes view only (A-48).
+  - Cut line, in order: My bookings page, home page extras, promo usage caps. Sign-up can no longer be cut.
+
+## D-25 Migrations stop rather than guess
+
+- Chosen: migration 0003 checks for holds or bookings without an account and stops with instructions instead of altering the column.
+- Why: there is no correct owner to invent for existing rows. On a development database the fix is to rebuild it; production data would need an agreed backfill plan. A test proves the migration refuses such rows.
+

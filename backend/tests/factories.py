@@ -61,8 +61,22 @@ def allotment(
     return row
 
 
-def hold(db: Session, **overrides: object) -> Hold:
+def guest(db: Session, email: str | None = None) -> User:
+    """A guest account. Every hold and booking needs one (A-43)."""
+    u = User(
+        email=email or f"guest-{uuid.uuid4().hex[:8]}@example.com",
+        password_hash="x",
+        full_name="Test Guest",
+        role="guest",
+    )
+    db.add(u)
+    db.flush()
+    return u
+
+
+def hold(db: Session, user: User | None = None, **overrides: object) -> Hold:
     values: dict[str, object] = dict(
+        user_id=(user or guest(db)).id,
         check_in=STAY,
         check_out=STAY + timedelta(days=2),
         subtotal_paise=1_900_000,
@@ -129,6 +143,7 @@ def payment(db: Session, h: Hold, key: str | None = None, status: str = "succeed
 def booking(db: Session, h: Hold, p: Payment, **overrides: object) -> Booking:
     values: dict[str, object] = dict(
         reference="BK-7F3K9QXM",
+        user_id=h.user_id,
         hold_id=h.id,
         payment_id=p.id,
         check_in=h.check_in,

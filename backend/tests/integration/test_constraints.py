@@ -55,6 +55,17 @@ def test_one_allotment_row_per_room_type_per_night(db: Session) -> None:
 # ---------- holds, payments, bookings: the double-booking backstops ----------
 
 
+def test_hold_needs_an_account(db: Session) -> None:
+    with pytest.raises(IntegrityError):
+        hold(db, user_id=None)
+
+
+def test_booking_needs_an_account(db: Session) -> None:
+    h = hold(db)
+    with pytest.raises(IntegrityError):
+        booking(db, h, payment(db, h), user_id=None)
+
+
 def test_stay_must_end_after_it_starts(db: Session) -> None:
     with pytest.raises(IntegrityError):
         hold(db, check_out=STAY)

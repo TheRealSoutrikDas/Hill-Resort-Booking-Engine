@@ -66,7 +66,8 @@ python -m app.seed --reset --today 2026-11-07 # as if today were that date
 ```
 
 Loads 76 keys (64 rooms, 12 villas), nightly rates and web allotment from 60 days ago
-to 180 days ahead, 3 promo codes, 40 bookings, 4 demo accounts and the 27 sample
+to 180 days ahead, 3 promo codes, 40 bookings, 4 demo accounts (guest, 2 staff, GM)
+plus one account per booking guest (booking requires an account), and the 27 sample
 enquiries. It also creates three states to demonstrate: a Family Suite with one unit
 left, a sold-out weekend and a three-night blackout (dates are printed at the end).
 All numbers are in `backend/app/seed/plan.py`; all personal data is invented.
@@ -97,6 +98,13 @@ alembic downgrade -1                                 # undo the latest one
 alembic upgrade head --sql                           # print the SQL without running it
 alembic check                                        # fail if models and migrations differ
 alembic revision --autogenerate -m "describe change" # new migration; always review it
+```
+
+If an upgrade stops with instructions (for example migration 0003 on a database seeded
+before accounts were required), rebuild the development database:
+
+```bash
+alembic downgrade base && alembic upgrade head && python -m app.seed --reset
 ```
 
 ## Enquiry evaluation
