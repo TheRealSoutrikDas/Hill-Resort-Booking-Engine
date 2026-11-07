@@ -87,3 +87,11 @@ class InvalidPromoCode(DomainError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class PaymentNotAllowed(DomainError):
+    """A payment cannot start (for example guest details are missing). `code` says why."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code

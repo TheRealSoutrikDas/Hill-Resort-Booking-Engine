@@ -194,3 +194,12 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Quotes: `quote_stay` validates the request, checks the catalogue, applies the promo and prices the stay without locks or writes. `create_hold` calls it, then locks and writes. The price shown on the room page and the price held therefore come from one code path; a test asserts they are equal, with and without a promo.
 - Test evidence: removing the use reservation, the use count, the "leave this hold out" rule or the promo row lock each makes tests fail. The race test gives every guest a different night, so the allotment lock cannot hide a missing promo lock.
 
+## D-31 Payments: a gateway adapter, and no gateway call inside a transaction
+
+- Adapter: `PaymentProvider` has `charge` and `refund`. `MockPaymentProvider` simulates success, decline and timeout, and like a real gateway remembers each idempotency key, so a repeated key returns the first result and never charges twice. A real gateway would be a second implementation selected by `PAYMENT_PROVIDER`.
+- Checkout (`pay_for_hold`) runs as three short transactions: record a `pending` payment and commit; call the gateway outside any transaction; record the result (captured goes to `confirm_booking`). A slow gateway therefore never holds row locks while other guests wait, and the attempt is on record before any money moves. Because it owns its transactions, checkout takes a session factory, unlike the other services.
+- Double clicks: the same key finds the earlier payment and returns its result (or "processing"). Three layers stop a second charge: the lookup after locking the hold row, the unique `payments.idempotency_key`, and the gateway's own key memory.
+- After capture, if confirmation fails (D-27), the refund is processed straight away. A lock timeout while recording a capture is retried; if it keeps failing the payment stays `pending` with the money at the gateway, which a real system would settle from the gateway's records.
+- Known limits, accepted for a simulation: the mock's key memory is per process; a mock timeout means "not charged" (A-62).
+- Test evidence: removing the expiry check, the guest-details check, the refund after a failed confirmation, or the same-key lookup each makes tests fail. Ten parallel clicks with one key charge once and create one booking.
+

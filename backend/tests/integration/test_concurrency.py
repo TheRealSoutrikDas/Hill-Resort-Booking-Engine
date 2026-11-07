@@ -374,3 +374,37 @@ def test_ten_guests_one_last_promo_use(committed, round_) -> None:
         )
         assert code.used_count + reserved <= code.max_uses
     check_stock(committed)
+
+
+# ---------- 8. one payment key, ten parallel clicks ----------
+
+
+def test_ten_clicks_with_one_payment_key_charge_once(committed, round_) -> None:
+    from app.services.checkout import CONFIRMED, PROCESSING, pay_for_hold
+    from app.services.payments.mock import MockPaymentProvider
+
+    with committed() as s, s.begin():
+        c = catalogue(s)
+        owner = c.user.id
+        req = request(line(c.dlx, c.ro))
+    with committed() as s:
+        hold_id = hold_step(s, owner, req).hold_id
+        details_step(s, owner, hold_id)
+    provider, idem = MockPaymentProvider(), uuid.uuid4().hex
+
+    outcomes = run_in_parallel(
+        committed,
+        [
+            lambda s: pay_for_hold(
+                committed, provider, owner, hold_id, idem, rules=RULES, clock=lambda: NOW
+            )
+        ]
+        * GUESTS,
+    )
+
+    assert not errors(outcomes), errors(outcomes)
+    statuses = [o.value.status for o in outcomes]
+    assert set(statuses) <= {CONFIRMED, PROCESSING} and CONFIRMED in statuses
+    assert provider.captured_count == 1
+    assert count(committed, Payment) == 1 and count(committed, Booking) == 1
+    check_stock(committed)
