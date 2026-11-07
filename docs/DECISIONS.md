@@ -177,3 +177,12 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Chosen: the partial unique index now covers only `status = 'succeeded'`, the payment that paid for the booking. One booking per hold is still guaranteed by the unique `bookings.hold_id` and `bookings.payment_id`.
 - Why a new migration, not an edit of 0001: 0001 is already merged and applied; migrations are never rewritten once shared.
 
+## D-29 Concurrency is tested with real threads against real Postgres
+
+- Chosen: `tests/integration/test_concurrency.py`. Each simulated guest runs in its own thread on its own database connection; a barrier releases them at the same instant. Each scenario runs 5 rounds by default (`CONCURRENCY_ROUNDS`), and after each one a check confirms that `sold` never exceeds the web allotment, `sold` plus active holds never exceeds it, and `sold` equals the confirmed booking units on every night.
+- Scenarios: 10 guests for the last unit (hold only, and the full flow to a booking); a 3-night stay with one tight night, including guests who avoid that night; an expired hold's owner racing new guests; the same payment submitted 10 times; two payments from two tabs; mixed-room bookings in opposite line orders; cancelling the last unit while others book.
+- Evidence they have teeth: 450 of 450 passed over 50 rounds. With `FOR UPDATE` removed, 27 of 45 failed across 6 scenarios. The expired-hold race went both ways over 40 rounds (owner 17, new guest 23), so both branches are exercised.
+- Defence in depth, measured: double submits still produced one booking with only the hold row lock, or only the allotment lock. With both removed, the unique constraints refused the second booking.
+- Honest limit: the deadlock test also passes without the `ORDER BY` in the lock query, because Postgres usually scans these rows in a consistent order anyway. The `ORDER BY` makes that order a guarantee rather than a property of the query plan.
+- Rejected: SQLite for these tests (no row locks, so it cannot show the guarantee), and asserting on timings (flaky; the tests assert only on counts).
+

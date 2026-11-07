@@ -88,6 +88,13 @@ ruff check . && ruff format --check .
 Integration tests run against real PostgreSQL and refuse any database whose name
 does not end in `_test`. Each run rebuilds the test schema from the migrations.
 
+The concurrency tests (`tests/integration/test_concurrency.py`) run every scenario 5
+times by default, with 10 parallel guests on separate connections. For a longer soak:
+
+```bash
+CONCURRENCY_ROUNDS=50 pytest tests/integration/test_concurrency.py
+```
+
 ## Migrations
 
 Run from `backend/`:
