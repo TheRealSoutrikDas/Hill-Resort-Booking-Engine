@@ -37,3 +37,24 @@ class StockLocked(DomainError):
 
     The current transaction is aborted and must be rolled back.
     """
+
+
+class InvalidBookingRequest(DomainError):
+    """The requested rooms, guests or rates break a booking rule. `code` is stable."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
+class HoldNotFound(DomainError):
+    """No such hold for this account. Also raised for another account's hold, so a
+    hold id never reveals that someone else's hold exists (A-43)."""
+
+
+class HoldNotActive(DomainError):
+    """The hold expired, was released or was already paid. `code` says which."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
