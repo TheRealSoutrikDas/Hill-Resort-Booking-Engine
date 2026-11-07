@@ -70,3 +70,30 @@ def test_blank_values_in_env_file_fall_back_to_defaults(
     settings = Settings(_env_file=env_file)
     assert settings.business_timezone == "Asia/Kolkata"
     assert settings.log_level == "INFO"
+
+
+def test_gst_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@host:5432/db")
+    for name in ("GST_SLAB_THRESHOLD_PAISE", "GST_RATE_LOW_BP", "GST_RATE_HIGH_BP"):
+        monkeypatch.delenv(name, raising=False)
+    settings = Settings(_env_file=None)
+    assert settings.gst_slab_threshold_paise == 750_000
+    assert (settings.gst_rate_low_bp, settings.gst_rate_high_bp) == (500, 1_800)
+
+
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        ("GST_SLAB_THRESHOLD_PAISE", "0"),
+        ("GST_RATE_HIGH_BP", "10001"),
+        ("GST_RATE_LOW_BP", "-1"),
+        ("GST_RATE_LOW_BP", "2000"),  # low rate above the high rate
+    ],
+)
+def test_invalid_gst_settings_rejected(
+    monkeypatch: pytest.MonkeyPatch, name: str, value: str
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@host:5432/db")
+    monkeypatch.setenv(name, value)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
