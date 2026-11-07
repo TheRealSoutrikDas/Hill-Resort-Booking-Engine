@@ -35,6 +35,7 @@ from app.services.errors import (
     PaymentMismatch,
     PaymentNotAllowed,
     RateLimited,
+    RoomTypeNotFound,
     StockLocked,
 )
 
@@ -72,6 +73,7 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     EmailTaken: (409, "email_taken"),
     InvalidSignup: (422, "invalid_signup"),
     RateLimited: (429, "rate_limited"),
+    RoomTypeNotFound: (404, "room_type_not_found"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}

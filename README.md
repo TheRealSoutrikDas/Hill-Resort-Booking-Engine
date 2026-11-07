@@ -65,7 +65,9 @@ uvicorn app.main:create_app --factory --reload   # http://localhost:8000
 curl localhost:8000/health                        # {"status":"ok","database":"ok"}
 ```
 
-Interactive API docs are at `http://localhost:8000/docs`. Logs are JSON lines on
+Interactive API docs are at `http://localhost:8000/docs`. Public routes:
+`GET /api/rooms`, `GET /api/rooms/{code}`, `POST /api/quotes`, `POST /api/bookings/lookup`.
+All amounts are integer paise. Logs are JSON lines on
 stdout and never contain personal data.
 
 ## Demo logins

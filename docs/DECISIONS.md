@@ -232,3 +232,11 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Rejected: `slowapi` (a library for about 60 lines of explainable code); fixed one-minute counters (allow double bursts at the boundary); Redis (out of scope).
 - Test evidence: removing the per-IP login limit, the email lock check, the clearing on success, the email normalisation, the memory cap or the LRU ordering each makes tests fail.
 
+## D-35 Public booking routes (step 12a)
+
+- Routes: `GET /api/rooms` (search), `GET /api/rooms/{code}` (detail with a quote per active plan), `POST /api/quotes` (a whole selection with an optional promo), `POST /api/bookings/lookup` (view only, rate limited).
+- Every price comes from `quote_stay`, so the room page, the summary and the hold agree; a test compares all three for one selection.
+- The API speaks in codes and integer paise (A-84, A-89). A rate plan that is not on sale for the dates appears with no price and a reason code, so the page can say why.
+- Lookup accepts the guest email or the account email, never puts the email in a URL, masks it in the answer and omits the phone. A wrong reference and a wrong email return the same 404. A malformed reference is rejected before the query; that is an optimisation only, since the query would return the same 404.
+- Routes read the time from the app's clock (`Now` dependency, D-22), so API tests run against fixed dates.
+

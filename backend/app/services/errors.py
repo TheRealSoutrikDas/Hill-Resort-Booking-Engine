@@ -131,3 +131,7 @@ class RateLimited(DomainError):
     def __init__(self, retry_after: int) -> None:
         super().__init__("Too many attempts. Please wait a little and try again.")
         self.retry_after = retry_after
+
+
+class RoomTypeNotFound(DomainError):
+    """No room type with this code."""

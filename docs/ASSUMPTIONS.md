@@ -90,4 +90,10 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-80 | Rate limits | The per-email login limit counts failed attempts only, keyed by a hash of the email, and is cleared by a correct login. While it is reached, even the right password is refused. | Confirmed |
 | A-81 | Rate limits | The client IP comes from uvicorn's proxy-header support, which believes X-Forwarded-For only from addresses in `FORWARDED_ALLOW_IPS` (default: this machine only). Production sets it to the proxy's address. To be verified with the frontend. | Confirmed |
 | A-82 | Deployment | Rate limits (and the mock gateway's key memory) are per process, so the backend runs as one instance with one worker (deployment.md). | Confirmed |
-| A-83 | Logging | A refused attempt is logged with the route and limit name only, never the IP or email. Alternative offered: also log a daily-salted hash of the IP so attacks can be traced to one source. | Proposed, option (a) built |
+| A-83 | Logging | A refused attempt is logged with the route and limit name only, never the IP or email. Alternative offered: also log a daily-salted hash of the IP so attacks can be traced to one source. | Confirmed, option (a) |
+| A-84 | API | The API identifies room types, rate plans and promo codes by code (`DLX`, `RO`, `WELCOME10`), never by database id. | Confirmed |
+| A-85 | API | Room search without dates lists room types only. With dates and a guest count it adds units available, whether the guests fit one room, and the lowest total for one room on any active plan. | Confirmed |
+| A-86 | API | Lookup is POST with a JSON body and accepts the booking's guest email or the booking account's email. It returns a view-only summary (no phone, email partly masked). A wrong reference and a wrong email give the same 404. | Confirmed |
+| A-87 | API | Payment returns 200 with a status once the gateway has been called; refusals before any charge are errors; `Idempotency-Key` is a required header. | Confirmed |
+| A-88 | API | Room photos are static frontend files named by room code, with sources in `docs/PHOTO_SOURCES.md`; the API carries no photo data. | Confirmed |
+| A-89 | API | All amounts in responses are integer paise; the frontend formats them. | Confirmed |

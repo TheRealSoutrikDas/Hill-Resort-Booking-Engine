@@ -20,9 +20,9 @@ def make_client(
     """make_client(extra_router=None) -> a TestClient over HTTPS, so Secure cookies flow."""
     clients: list[TestClient] = []
 
-    def build(extra_router: APIRouter | None = None) -> TestClient:
+    def build(extra_router: APIRouter | None = None, clock=None) -> TestClient:
         settings = Settings(database_url=test_database_url, cors_origins=FRONTEND, _env_file=None)
-        app = create_app(settings, session_factory=committed)
+        app = create_app(settings, session_factory=committed, **({"clock": clock} if clock else {}))
         if extra_router is not None:
             app.include_router(extra_router)
         client = TestClient(app, base_url="https://testserver")

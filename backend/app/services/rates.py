@@ -38,3 +38,13 @@ def load_nightly_rates(
     return {
         (r.room_type_id, r.rate_plan_id, r.stay_date): r.price_paise for r in session.scalars(stmt)
     }
+
+
+def room_types_by_code(session: Session, codes: Iterable[str]) -> dict[str, RoomType]:
+    codes = {c.strip().upper() for c in codes}
+    return {rt.code: rt for rt in session.scalars(select(RoomType).where(RoomType.code.in_(codes)))}
+
+
+def rate_plans_by_code(session: Session, codes: Iterable[str]) -> dict[str, RatePlan]:
+    codes = {c.strip().upper() for c in codes}
+    return {rp.code: rp for rp in session.scalars(select(RatePlan).where(RatePlan.code.in_(codes)))}
