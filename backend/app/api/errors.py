@@ -34,6 +34,7 @@ from app.services.errors import (
     NotAvailable,
     PaymentMismatch,
     PaymentNotAllowed,
+    RateLimited,
     StockLocked,
 )
 
@@ -70,6 +71,7 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     CsrfFailed: (403, "csrf_failed"),
     EmailTaken: (409, "email_taken"),
     InvalidSignup: (422, "invalid_signup"),
+    RateLimited: (429, "rate_limited"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}
@@ -111,7 +113,11 @@ def _details(exc: DomainError) -> Any:
 
 async def _domain_error(request: Request, exc: DomainError) -> JSONResponse:
     status, code = _status_and_code(exc)
-    headers = {"Retry-After": "1"} if isinstance(exc, StockLocked) else None
+    headers = None
+    if isinstance(exc, StockLocked):
+        headers = {"Retry-After": "1"}
+    elif isinstance(exc, RateLimited):
+        headers = {"Retry-After": str(exc.retry_after)}
     return error_response(status, code, str(exc), _details(exc), headers)
 
 
