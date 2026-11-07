@@ -1,4 +1,4 @@
-"""Phase 1 of a booking: hold stock for a signed-in guest and fix the price.
+"""Phase 1 of a booking: hold stock (and a promo use) for a signed-in guest and fix the price.
 
 A hold reserves units on every night of the stay for `hold_ttl_minutes` and stores the
 exact per-night prices the guest saw (A-45). It never changes `allotments.sold`; only
@@ -12,64 +12,33 @@ stock locks taken by `create_hold`.
 """
 
 import re
-from collections import Counter
-from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import Settings
 from app.db.models import Hold, HoldItem, HoldItemNight
 from app.db.models.enums import HoldStatus
 from app.services.availability import StockRequest, lock_and_check
-from app.services.dates import business_today, validate_stay
 from app.services.errors import HoldNotActive, HoldNotFound, InvalidBookingRequest
-from app.services.pricing import GstRule, LineInput, StayPrice, price_stay
-from app.services.rates import load_nightly_rates, load_rate_plans, load_room_types
+from app.services.pricing import StayPrice
+from app.services.promos import reserve_use
+from app.services.quotes import HoldLineRequest, HoldRequest, HoldRules, quote_stay
 
-
-@dataclass(frozen=True)
-class HoldRules:
-    """The booking rules a hold needs, so tests can set them without environment variables."""
-
-    tz: ZoneInfo
-    horizon_days: int
-    max_nights: int
-    max_units: int
-    ttl_minutes: int
-    lock_timeout_ms: int
-    gst_rule: GstRule
-
-    @classmethod
-    def from_settings(cls, settings: Settings) -> "HoldRules":
-        return cls(
-            tz=ZoneInfo(settings.business_timezone),
-            horizon_days=settings.booking_horizon_days,
-            max_nights=settings.max_stay_nights,
-            max_units=settings.max_units_per_booking,
-            ttl_minutes=settings.hold_ttl_minutes,
-            lock_timeout_ms=settings.lock_timeout_ms,
-            gst_rule=GstRule.from_settings(settings),
-        )
-
-
-@dataclass(frozen=True)
-class HoldLineRequest:
-    room_type_id: int
-    rate_plan_id: int
-    units: int
-    guests: int
-
-
-@dataclass(frozen=True)
-class HoldRequest:
-    check_in: date
-    check_out: date
-    lines: Sequence[HoldLineRequest]
+# The request and rules types live with the quote; re-exported for callers of holds.
+__all__ = [
+    "HoldLineRequest",
+    "HoldRequest",
+    "HoldResult",
+    "HoldRules",
+    "create_hold",
+    "get_owned_hold",
+    "release_hold",
+    "require_active",
+    "set_guest_details",
+]
 
 
 @dataclass(frozen=True)
@@ -82,27 +51,6 @@ class HoldResult:
 # ---------- create ----------
 
 
-def _validate_lines(lines: Sequence[HoldLineRequest], max_units: int) -> None:
-    """Checks that need no database, so bad requests never take a lock."""
-    if not lines:
-        raise InvalidBookingRequest("no_lines", "Choose at least one room.")
-    for line in lines:
-        if line.units <= 0:
-            raise InvalidBookingRequest("invalid_units", "Each room line needs at least one room.")
-        if line.guests < line.units:
-            raise InvalidBookingRequest("too_few_guests", "Each room needs at least one guest.")
-    pairs = Counter((line.room_type_id, line.rate_plan_id) for line in lines)
-    if any(count > 1 for count in pairs.values()):
-        raise InvalidBookingRequest(
-            "duplicate_line", "Combine rooms of the same type and plan into one line."
-        )
-    if sum(line.units for line in lines) > max_units:
-        raise InvalidBookingRequest(
-            "too_many_units",
-            f"Online bookings are up to {max_units} rooms. Please send us an enquiry.",
-        )
-
-
 def create_hold(
     session: Session,
     user_id: int,
@@ -110,61 +58,31 @@ def create_hold(
     *,
     now: datetime,
     rules: HoldRules,
+    promo_code: str | None = None,
 ) -> HoldResult:
-    """Validate, check stock under lock, price, and write the hold. All or nothing:
-    if any line is short on any night, nothing is written (NotAvailable)."""
-    nights = validate_stay(
-        request.check_in,
-        request.check_out,
-        today=business_today(now, rules.tz),
-        horizon_days=rules.horizon_days,
-        max_nights=rules.max_nights,
-    )
-    _validate_lines(request.lines, rules.max_units)
+    """Quote, then check stock and the promo code under lock, then write the hold.
+    All or nothing: if any line is short on any night, nothing is written (NotAvailable);
+    if the code's last use is taken, nothing is written (InvalidPromoCode)."""
+    # Validation, catalogue checks and price: the same code path as the room page.
+    quote = quote_stay(session, request, now=now, rules=rules, promo_code=promo_code)
 
-    room_types = load_room_types(session, (line.room_type_id for line in request.lines))
-    rate_plans = load_rate_plans(session, (line.rate_plan_id for line in request.lines))
-    for line in request.lines:
-        room_type = room_types.get(line.room_type_id)
-        if room_type is None:
-            raise InvalidBookingRequest("unknown_room_type", "That room type does not exist.")
-        if line.guests > line.units * room_type.max_guests:
-            raise InvalidBookingRequest(
-                "too_many_guests",
-                f"{room_type.name} takes up to {room_type.max_guests} guests per room.",
-            )
-        rate_plan = rate_plans.get(line.rate_plan_id)
-        if rate_plan is None:
-            raise InvalidBookingRequest("unknown_rate_plan", "That rate plan does not exist.")
-        if not rate_plan.is_active:
-            raise InvalidBookingRequest("rate_plan_inactive", f"{rate_plan.name} is not on sale.")
-
-    rates = load_nightly_rates(
-        session, ((line.room_type_id, line.rate_plan_id) for line in request.lines), nights
-    )
-    line_inputs = []
-    for line in request.lines:
-        nightly = {n: rates.get((line.room_type_id, line.rate_plan_id, n)) for n in nights}
-        if any(price is None for price in nightly.values()):
-            raise InvalidBookingRequest(
-                "rate_unavailable", "These dates are not on sale for this room and plan."
-            )
-        line_inputs.append(LineInput(nightly, line.units))
-
-    # The only locked part: check stock, then write. Locks are held until commit.
+    # The only locked part, in the shared order: allotment rows, then the promo row.
     lock_and_check(
         session,
         [StockRequest(line.room_type_id, line.units) for line in request.lines],
-        nights,
+        list(quote.nights),
         now,
         rules.lock_timeout_ms,
     )
-    price = price_stay(line_inputs, 0, rules.gst_rule)  # promo codes join in step 9 (A-47)
+    if quote.promo is not None:
+        reserve_use(session, quote.promo.id, now=now, lock_timeout_ms=rules.lock_timeout_ms)
 
+    price = quote.price
     hold = Hold(
         user_id=user_id,
         check_in=request.check_in,
         check_out=request.check_out,
+        promo_code_id=quote.promo.id if quote.promo else None,
         subtotal_paise=price.subtotal_paise,
         discount_paise=price.discount_paise,
         tax_paise=price.tax_paise,
