@@ -5,7 +5,7 @@ FastAPI app, layered as routes, services, database.
 ```
 app/api/            HTTP routes (thin: validate, call a service, shape the response)
 app/services/       Business logic (allotment, holds, pricing, enquiry pipeline), testable without HTTP
-app/db/             SQLAlchemy models and session
+app/db/             SQLAlchemy base, session and models (users, inventory, booking, enquiry)
 app/schemas/        Pydantic request and response models
 app/classifiers/    EnquiryClassifier interface and backends (keyword, llm)
 app/core/           Settings, logging, security, error format

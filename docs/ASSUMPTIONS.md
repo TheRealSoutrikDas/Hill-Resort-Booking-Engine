@@ -13,18 +13,29 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-07 | AI | LLM provider and model. Proposed in stage 5. | Open |
 | A-08 | Pricing | GST slab thresholds and rounding rule. Proposed in stage 3. | Open |
 | A-09 | Seed | Room types, rate plans, rates, allotment fraction, blackout dates, promo codes, booking count. Proposed in stage 1, step 3. | Open |
-| A-10 | Export | CSV column layout as listed in the brief. | Open, to confirm |
+| A-10 | Export | Brief's column layout, one CSV row per booking line, plus a `line_number` column. `booking_id` repeats across a booking's lines; amount and tax columns are per line. | Confirmed |
 | A-11 | Auth | Browser calls the API through Next.js rewrites so the session cookie is first-party. | Open, confirm before stage 4 |
 | A-12 | Auth | Guest checkout plus optional sign up; earlier guest bookings are never attached by email automatically. | Open, confirm before stage 4 |
-| A-13 | Booking | One booking is one room unit. Two rooms means two bookings. | Proposed |
-| A-14 | Promo | Promo codes are percent-off only. | Proposed |
-| A-15 | Pricing | Rate plans are shared across room types and priced per room type per date. A missing rate means that night is not sellable. | Proposed |
-| A-16 | Booking | `guests` is one count checked against the room type's `max_guests`; no adults and children split. | Proposed |
-| A-17 | Booking | Booking reference is a random 8-character code without ambiguous characters, for example `BK-7F3K9QXM`. | Proposed |
-| A-18 | Database | PostgreSQL 16 locally, in CI and in production. The `postgres:16` image tag follows minor releases. | Proposed |
-| A-19 | Auth | The GM account may have no team. | Proposed |
-| A-20 | Promo | `used_count` goes up only on a confirmed booking; a cancellation does not give the use back. | Proposed |
+| A-13 | Booking | One booking is one guest's purchase of any mix of room types and units. | Changed (was: one booking is one unit) |
+| A-13a | Booking | One stay per booking: every line shares the same check-in and check-out. Different dates means separate bookings. | Confirmed |
+| A-13b | Booking | A line is a room type, a rate plan, a number of units and a guest count; guests must not exceed units x `max_guests`. | Confirmed |
+| A-13c | Booking | Cancellation is for the whole booking; no partial cancellation. | Confirmed |
+| A-13d | Promo | A promo code applies to the whole booking and counts as one use. | Confirmed |
+| A-14 | Promo | Promo codes are percent-off only. | Confirmed |
+| A-15 | Pricing | Rate plans are shared across room types and priced per room type per date. A missing rate means that night is not sellable. | Confirmed |
+| A-16 | Booking | `guests` is one count per line; no adults and children split. | Confirmed |
+| A-17 | Booking | Booking reference is `BK-` plus 8 random characters from 31 unambiguous ones (no I, L, O, 0, 1). Uniqueness comes from a UNIQUE constraint; the service retries on a collision. | Confirmed |
+| A-18 | Database | PostgreSQL 16 locally, in CI and in production. The `postgres:16` image tag follows minor releases. | Confirmed |
+| A-19 | Auth | The GM account may have no team. | Confirmed |
+| A-20 | Promo | `used_count` goes up only on a confirmed booking; a cancellation does not give the use back. | Confirmed |
 | A-21 | Local dev | Local Postgres listens on 127.0.0.1:5432 only. | Proposed |
 | A-22 | Tests | Tests use a separate database named `<POSTGRES_DB>_test`, and refuse any name without the `_test` suffix. | Proposed |
 | A-23 | Tooling | Direct dependencies are pinned exactly; transitive ones are not locked. A lock file is a possible later step. | Proposed |
 | A-24 | Tooling | New dependency versions must be at least two weeks old when added. | Proposed |
+| A-25 | Booking | At most 4 units per booking (`MAX_UNITS_PER_BOOKING`, enforced in the service). Larger groups use the enquiry form. | Confirmed |
+| A-26 | Auth | Exactly one account carries the GM flag, enforced by a partial unique index. | Proposed |
+| A-27 | Enquiries | Channels are web, email, whatsapp and phone. Only the web form exists; the others mark seeded or manually logged enquiries. | Proposed |
+| A-28 | Enquiries | Consent timestamp and version are required for web enquiries only, since other channels never pass through the form. | Proposed |
+| A-29 | Payments | A hold may have several payment attempts (for example a failure, then a retry), but at most one that captured money. | Proposed |
+| A-30 | Enquiries | Enquiry references are `ENQ-` plus at least 4 digits, matching the client's samples (ENQ-4410). | Proposed |
+| A-31 | Promo | A promo's valid_from and valid_to dates are inclusive and compared with the booking date in IST. | Proposed |
