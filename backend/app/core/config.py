@@ -5,6 +5,7 @@ In production the hosting provider sets real environment variables and no .env f
 """
 
 from functools import lru_cache
+from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import Field, field_validator, model_validator
@@ -49,6 +50,9 @@ class Settings(BaseSettings):
     hold_ttl_minutes: int = Field(default=10, gt=0)
     # How long a booking waits for another booking's row lock before giving up.
     lock_timeout_ms: int = Field(default=5_000, gt=0)
+
+    # Payment gateway adapter. Only the mock exists; payments are simulated (brief).
+    payment_provider: Literal["mock"] = "mock"
 
     # GST on room nights (A-08). Tested per room per night on the price actually charged:
     # at or below the threshold the low rate applies, above it the high rate.
