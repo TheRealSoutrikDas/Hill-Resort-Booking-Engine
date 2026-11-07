@@ -251,3 +251,11 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Honest note on payment: the sign-in check reads the session in a short read-only transaction that stays open while the gateway is called. It holds no row locks, so nothing waits on it; the rule in D-31 (no gateway call while holding locks) still holds.
 - Test evidence: making the routes accept any signed-in user, reporting expired holds as active, always offering cancellation, making the idempotency key optional, or computing the receipt's taxable amount without the discount each makes tests fail.
 
+## D-37 The daily export records events, so a day's file never changes
+
+- Chosen: `GET /api/exports/bookings.csv?date=YYYY-MM-DD` lists, one row per booking line, the bookings confirmed and the bookings cancelled on that IST date. Each row's status and payment status are that day's event (`confirmed` and `paid`, or `cancelled` and `refund`).
+- Why: the brief asks for the same file on re-download and for cancelled bookings to show as cancelled in the next export. Showing current status would rewrite past files whenever a booking is cancelled, and the reservation system could import a change twice. With events, every past day's file is fixed; a test downloads a day, cancels the booking the next day, and checks the first file is byte for byte unchanged.
+- Rows are sorted by event time, event, booking, line; days are IST via `day_bounds`.
+- Safety: spreadsheet formula injection is neutralised in free-text cells (name, email); phones are already limited to digits, spaces and a leading `+`. `Cache-Control: no-store` because the file holds personal data. Access is the reservations team and the GM only.
+- Test evidence: using current status, current payment status, UTC days, no neutralising, an unstable order, any staff team, or a cacheable response each makes tests fail.
+
