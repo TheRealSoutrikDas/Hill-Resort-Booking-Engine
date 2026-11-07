@@ -10,6 +10,8 @@ Run locally from backend/:
 import logging
 import time
 import uuid
+from collections.abc import Callable
+from datetime import datetime
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,9 +20,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-from app.api import auth, health
+from app.api import auth, health, lookup, rooms
 from app.api.errors import error_response, register_error_handlers
 from app.api.security import OriginCheckMiddleware
+from app.core.clock import utc_now
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging, exception_fields, request_id_var, safe_request_id
 from app.core.ratelimit import SlidingWindowLimiter
@@ -71,6 +74,7 @@ def _operation_id(route: APIRoute) -> str:
 def create_app(
     settings: Settings | None = None,
     session_factory: sessionmaker[Session] | None = None,
+    clock: Callable[[], datetime] = utc_now,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
@@ -87,6 +91,7 @@ def create_app(
     app.state.settings = settings
     app.state.session_factory = session_factory
     app.state.engine = session_factory.kw["bind"]
+    app.state.clock = clock
     # One limiter per app: counts live in this process (A-82).
     app.state.limiter = SlidingWindowLimiter()
 
@@ -104,4 +109,6 @@ def create_app(
 
     app.include_router(health.router)
     app.include_router(auth.router)
+    app.include_router(rooms.router)
+    app.include_router(lookup.router)
     return app
