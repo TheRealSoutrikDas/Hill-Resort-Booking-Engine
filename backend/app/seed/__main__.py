@@ -81,7 +81,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print(f"Seeded {target} for {ctx.today.isoformat()} ({ctx.tz.key})")
-    print(f"  users: {summary.users}")
+    print(
+        f"  accounts: {summary.demo_accounts} demo (guest, 2 staff, GM) + "
+        f"{summary.booking_guest_accounts} booking guests"
+    )
     print(f"  keys: {summary.room_units} rooms + {summary.villa_units} villas")
     print(f"  daily rates: {summary.rate_rows}, allotment rows: {summary.allotment_rows}")
     print(

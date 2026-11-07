@@ -91,7 +91,8 @@ class BookingSpec:
 
 @dataclass(frozen=True)
 class SeedSummary:
-    users: int
+    demo_accounts: int
+    booking_guest_accounts: int
     room_units: int
     villa_units: int
     rate_rows: int
@@ -356,15 +357,29 @@ def _seed_bookings(
     room_types: dict[str, RoomType],
     rate_plans: dict[str, RatePlan],
     promos: dict[str, PromoCode],
-) -> None:
+) -> int:
+    """Write every planned booking. Returns how many booking-guest accounts it created."""
     demo = users[plan.DEMO_GUEST_EMAIL]
     references: set[str] = set()
+    booking_guests = 0
     for n, spec in enumerate(specs):
         if spec.demo_guest:
-            user_id, name, email, phone = demo.id, demo.full_name, demo.email, demo.phone
+            account = demo
         else:
+            # Signing in is required to book (A-43), so every invented guest has an
+            # account. Like all seeded accounts it cannot log in (A-34).
             name = plan.GUEST_NAMES[n % len(plan.GUEST_NAMES)]
-            user_id, email, phone = None, plan.fake_email(name), plan.fake_phone(100 + n)
+            account = User(
+                email=plan.fake_email(name),
+                password_hash=plan.UNUSABLE_PASSWORD_HASH,
+                full_name=name,
+                role="guest",
+                phone=plan.fake_phone(100 + n),
+            )
+            session.add(account)
+            session.flush()
+            booking_guests += 1
+        user_id, name, email, phone = account.id, account.full_name, account.email, account.phone
 
         promo = promos[spec.promo] if spec.promo else None
         price = price_stay(
@@ -480,6 +495,7 @@ def _seed_bookings(
             )
         )
     session.flush()
+    return booking_guests
 
 
 def _seed_enquiries(
@@ -592,12 +608,15 @@ def seed(session: Session, ctx: SeedContext, samples: SampleEnquiryFile) -> Seed
 
     promos = _seed_promos(session, ctx, specs)
     session.flush()
-    _seed_bookings(session, rng, ctx, specs, rates, users, room_types, rate_plans, promos)
+    booking_guest_accounts = _seed_bookings(
+        session, rng, ctx, specs, rates, users, room_types, rate_plans, promos
+    )
     enquiry_count = _seed_enquiries(session, rng, ctx, samples)
     verify(session)
 
     return SeedSummary(
-        users=len(users),
+        demo_accounts=len(users),
+        booking_guest_accounts=booking_guest_accounts,
         room_units=sum(rt.units for rt in plan.ROOM_TYPES if rt.kind == "room"),
         villa_units=sum(rt.units for rt in plan.ROOM_TYPES if rt.kind == "villa"),
         rate_rows=len(rates),

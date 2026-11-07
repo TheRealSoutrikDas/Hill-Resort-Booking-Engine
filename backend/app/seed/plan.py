@@ -196,6 +196,8 @@ PROMOS: tuple[PromoPlan, ...] = (
 # ---------- users ----------
 
 # Seeded accounts cannot log in until stage 4 sets real password hashes (A-34).
+# Besides the demo accounts below, every invented booking guest gets a guest account,
+# because signing in is required to book (A-43).
 UNUSABLE_PASSWORD_HASH = "!"
 
 
