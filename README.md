@@ -68,6 +68,24 @@ curl localhost:8000/health                        # {"status":"ok","database":"o
 Interactive API docs are at `http://localhost:8000/docs`. Logs are JSON lines on
 stdout and never contain personal data.
 
+## Demo logins
+
+After `python -m app.seed --reset`:
+
+| Account | Email | Password |
+|---|---|---|
+| Guest | guest@example.com | Guest-Demo-2026 |
+| Staff, reservations | reservations@example.com | Reservations-Demo-2026 |
+| Staff, events | events@example.com | Events-Demo-2026 |
+| General manager | gm@example.com | GM-Demo-2026 |
+
+These are demo data only; a real deployment would not load demo accounts. The other
+seeded guest accounts exist to own bookings and cannot log in.
+
+The API signs users in with an HttpOnly session cookie. State-changing requests from a
+signed-in browser must send the CSRF token from `GET /api/auth/me` in `X-CSRF-Token`,
+and must come from an origin listed in `CORS_ORIGINS`.
+
 ## Seed data
 
 Run from `backend/` after `alembic upgrade head`:
