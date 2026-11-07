@@ -7,9 +7,10 @@ The API speaks in codes (`DLX`, `RO`), never database ids (A-84), and in integer
 from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import PromoCode
+from app.db.models import HoldItem, PromoCode, RatePlan, RoomType
 from app.services.errors import InvalidBookingRequest
 from app.services.pricing import StayPrice
 from app.services.quotes import HoldLineRequest, HoldRequest
@@ -121,5 +122,44 @@ def price_out(
         discount_paise=price.discount_paise,
         gst_paise=price.tax_paise,
         total_paise=price.total_paise,
+        promo=PromoOut(code=promo.code, percent_off=promo.percent_off) if promo else None,
+    )
+
+
+def stored_price_out(db: Session, hold_items: list[HoldItem], promo: PromoCode | None) -> PriceOut:
+    """The price exactly as it was fixed on the hold (A-45): read from the per-night rows,
+    never recalculated, so a later rate change cannot alter a receipt."""
+    codes = {rt.id: rt.code for rt in db.scalars(select(RoomType))}
+    plan_codes = {rp.id: rp.code for rp in db.scalars(select(RatePlan))}
+    lines = [
+        LineOut(
+            room_type=codes[item.room_type_id],
+            rate_plan=plan_codes[item.rate_plan_id],
+            units=item.units,
+            guests=item.guests,
+            nights=[
+                NightOut(
+                    date=n.stay_date,
+                    rate_paise=n.rate_paise,
+                    discount_paise=n.discount_paise,
+                    taxable_paise=n.rate_paise - n.discount_paise,
+                    gst_rate_bp=n.tax_rate_bp,
+                    gst_paise=n.tax_paise,
+                )
+                for n in item.nights
+            ],
+            subtotal_paise=item.subtotal_paise,
+            discount_paise=item.discount_paise,
+            gst_paise=item.tax_paise,
+            total_paise=item.subtotal_paise - item.discount_paise + item.tax_paise,
+        )
+        for item in hold_items
+    ]
+    return PriceOut(
+        lines=lines,
+        subtotal_paise=sum(line.subtotal_paise for line in lines),
+        discount_paise=sum(line.discount_paise for line in lines),
+        gst_paise=sum(line.gst_paise for line in lines),
+        total_paise=sum(line.total_paise for line in lines),
         promo=PromoOut(code=promo.code, percent_off=promo.percent_off) if promo else None,
     )
