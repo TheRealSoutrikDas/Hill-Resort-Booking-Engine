@@ -149,8 +149,9 @@ class HoldItemNight(Base):
 class Payment(Base):
     """A payment attempt against a hold through the (mock) provider.
 
-    A hold may have several attempts (a failure then a retry) but at most one that
-    captured money; the partial unique index enforces that.
+    A hold may have several attempts. At most one of them paid for the booking (status
+    `succeeded`); the partial unique index enforces that. Other captured payments, such
+    as a second payment from another browser tab, are refunded (A-50).
     """
 
     __tablename__ = "payments"
@@ -158,10 +159,10 @@ class Payment(Base):
         values_check("status", PaymentStatus),
         CheckConstraint("amount_paise > 0", name="amount_positive"),
         Index(
-            "uq_payments_one_captured_per_hold",
+            "uq_payments_one_succeeded_per_hold",
             "hold_id",
             unique=True,
-            postgresql_where=text("status IN ('succeeded', 'refund_pending', 'refunded')"),
+            postgresql_where=text("status = 'succeeded'"),
         ),
     )
 

@@ -1,16 +1,14 @@
 """Phase 1: creating, completing and releasing holds (A-25, A-42 to A-47)."""
 
 import threading
-from dataclasses import dataclass
 from datetime import timedelta
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.db.models import Allotment, DailyRate, Hold, RatePlan, RoomType, User
+from app.db.models import Allotment, DailyRate, Hold
 from app.services.availability import night_availability
 from app.services.errors import (
     HoldNotActive,
@@ -22,59 +20,24 @@ from app.services.errors import (
 from app.services.holds import (
     HoldLineRequest,
     HoldRequest,
-    HoldRules,
     create_hold,
     release_hold,
     set_guest_details,
 )
-from app.services.pricing import GstRule, LineInput, price_stay
-from tests.factories import NOW, STAY, allotment, daily_rate, guest, rate_plan, room_type
-
-N2 = STAY + timedelta(days=1)
-NIGHTS = [STAY, N2]
-RULES = HoldRules(
-    tz=ZoneInfo("Asia/Kolkata"),
-    horizon_days=180,
-    max_nights=14,
-    max_units=4,
-    ttl_minutes=10,
-    lock_timeout_ms=5_000,
-    gst_rule=GstRule(threshold_paise=750_000, low_rate_bp=500, high_rate_bp=1_800),
+from app.services.pricing import LineInput, price_stay
+from tests.factories import (
+    DLX_RO,
+    FST_RO,
+    N2,
+    NIGHTS,
+    NOW,
+    RULES,
+    STAY,
+    catalogue,
+    guest,
+    line,
+    request,
 )
-DLX_RO = 600_000  # Rs 6,000: 5% GST
-FST_RO = 1_000_000  # Rs 10,000: 18% GST
-
-
-@dataclass
-class Catalogue:
-    dlx: RoomType
-    fst: RoomType
-    ro: RatePlan
-    bb: RatePlan
-    off: RatePlan  # inactive
-    user: User
-
-
-def catalogue(db: Session, dlx_web: int = 4, fst_web: int = 3) -> Catalogue:
-    dlx = room_type(db, "DLX", max_guests=3)
-    fst = room_type(db, "FST", max_guests=4)
-    ro, bb, off = rate_plan(db, "RO"), rate_plan(db, "BB"), rate_plan(db, "OFF", is_active=False)
-    for night in NIGHTS:
-        allotment(db, dlx, night, dlx_web)
-        allotment(db, fst, night, fst_web)
-        for rt, base in ((dlx, DLX_RO), (fst, FST_RO)):
-            daily_rate(db, rt, ro, night, base)
-            daily_rate(db, rt, bb, night, base + 120_000)
-            daily_rate(db, rt, off, night, base)
-    return Catalogue(dlx, fst, ro, bb, off, guest(db))
-
-
-def line(rt: RoomType, rp: RatePlan, units: int = 1, guests: int | None = None) -> HoldLineRequest:
-    return HoldLineRequest(rt.id, rp.id, units, units * 2 if guests is None else guests)
-
-
-def request(*lines: HoldLineRequest, nights: int = 2) -> HoldRequest:
-    return HoldRequest(STAY, STAY + timedelta(days=nights), lines)
 
 
 def hold_count(db: Session) -> int:
