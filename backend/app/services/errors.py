@@ -58,3 +58,23 @@ class HoldNotActive(DomainError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class PaymentMismatch(DomainError):
+    """The payment does not belong to this hold, or was never captured. `code` says which."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
+class BookingNotFound(DomainError):
+    """No such booking for this account. Also raised for another account's booking."""
+
+
+class CancellationNotAllowed(DomainError):
+    """The booking can no longer be cancelled online. `code` says why."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
