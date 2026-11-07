@@ -71,3 +71,9 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-61 | Payments | The browser makes a new idempotency key for each deliberate click on Pay; a double click or automatic retry reuses it. A declined or timed-out attempt is final for its key. | Confirmed |
 | A-62 | Payments | A mock timeout means "not charged". A real gateway's timeout means "unknown"; a real integration would ask the gateway what happened to the key before retrying. Known limit of the mock. | Confirmed |
 | A-63 | Payments | Refunds are processed straight away through the mock and end `refunded`; if a refund call fails the payment stays `refund_pending` and can be retried. | Confirmed |
+| A-64 | API | Every error uses `{"error": {"code", "message", "details"}, "request_id"}`. Statuses: 422 validation and invalid stay, request or promo; 409 not available, hold not active, cancellation, payment not allowed or mismatched; 404 hold or booking not found; 503 busy (with Retry-After); 500 anything unexpected, with no internal details. | Confirmed |
+| A-65 | API | `/health` checks the database with `SELECT 1` and returns 503 if it is unreachable. | Confirmed |
+| A-66 | Logging | Logs are JSON lines on stdout, with route templates instead of real paths; never bodies, query strings, names, emails or phones; errors as exception type and code locations, without the message. | Confirmed |
+| A-67 | API | Business routes live under `/api/...`; `/health` stays at the root for the hosting platform. | Confirmed |
+| A-68 | API | CORS allows only the configured frontend origins (`CORS_ORIGINS`), with credentials. | Confirmed |
+| A-69 | API | One database transaction per request: committed when the route succeeds, rolled back on any error. Checkout manages its own (D-31). | Confirmed |
