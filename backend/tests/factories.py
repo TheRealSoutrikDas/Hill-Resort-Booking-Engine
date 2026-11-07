@@ -17,6 +17,7 @@ from app.db.models import (
     HoldItem,
     HoldItemNight,
     Payment,
+    PromoCode,
     RatePlan,
     RoomType,
     User,
@@ -140,6 +141,32 @@ def hold_for_stock(
         db.add(item)
     db.flush()
     return h
+
+
+def promo(
+    db: Session,
+    code: str = "WELCOME10",
+    percent_off: int = 10,
+    *,
+    max_uses: int | None = None,
+    used_count: int = 0,
+    valid_from: date | None = None,
+    valid_to: date | None = None,
+    is_active: bool = True,
+) -> PromoCode:
+    today = NOW.date()
+    row = PromoCode(
+        code=code,
+        percent_off=percent_off,
+        max_uses=max_uses,
+        used_count=used_count,
+        valid_from=valid_from or today - timedelta(days=30),
+        valid_to=valid_to or today + timedelta(days=180),
+        is_active=is_active,
+    )
+    db.add(row)
+    db.flush()
+    return row
 
 
 def payment(db: Session, h: Hold, key: str | None = None, status: str = "succeeded") -> Payment:
