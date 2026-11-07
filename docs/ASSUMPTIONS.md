@@ -44,3 +44,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-34 | Seed | Seeded accounts get an unusable password marker until stage 4 sets real password hashes. | Proposed |
 | A-35 | Seed | Seeded enquiries get a channel by position (web, email, whatsapp, web, phone, repeating), invented contact details, and are received over the last 72 hours. | Proposed |
 | A-36 | Seed | `--today` lets the seed run as if on a given date, for repeatable demos and tests. | Proposed |
+| A-37 | Availability | A night with no allotment row is not sellable online (0 available). | Confirmed |
+| A-38 | Booking | Check-in can be any day from today (IST) to 179 days ahead: a 180-day window including today (`BOOKING_HORIZON_DAYS`). | Confirmed |
+| A-39 | Booking | Maximum stay is 14 nights (`MAX_STAY_NIGHTS`); longer stays use the enquiry form. | Confirmed |
+| A-40 | Booking | Same-day check-in is allowed when stock is available. | Confirmed |
+| A-41 | Booking | A booking waits at most 5 seconds for another booking's row lock (`LOCK_TIMEOUT_MS`), then fails with "please try again" and holds nothing. | Confirmed |

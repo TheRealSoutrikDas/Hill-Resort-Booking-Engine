@@ -115,3 +115,24 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Chosen: one command, one transaction. Every number lives in `app/seed/plan.py`. Bookings are planned in memory first, so allotments are written with matching `sold` counts. Every booking is priced with the real pricing functions. A self-check compares `sold` with the confirmed bookings and promo `used_count` with promo bookings before commit. A fixed random seed and dates relative to today make it deterministic for a given date.
 - Safety: refuses to run if the schema is not at the latest migration, and refuses to replace existing data without `--reset`. If anything fails, nothing is written.
 - Rejected: SQL fixture files (cannot stay relative to today), a fake-data library (another dependency, and less control over deliberate states).
+
+## D-21 Allotment row locks are the single gate for every stock change
+
+- Chosen: every write that changes stock (create hold, convert hold, cancel, admin allotment change) first runs `lock_allotments`: `SELECT ... FOR UPDATE` on the allotment rows for every room type and night it touches, ordered by room type and then date. Only after the lock does it count active holds and check stock.
+- Why it prevents overbooking: concurrent requests for the same nights queue on the row lock. Under READ COMMITTED each statement sees everything committed before it starts, so the hold count, run as its own statement after the lock, includes the holds of every request that held the lock first.
+- Why that order: bookings can mix room types (A-13). If every writer locks in the same order, two writers can never each hold a row the other is waiting for, so there are no deadlocks. (The brief said "ordered by date"; ordering by room type first keeps that within each room type.)
+- Lock timeout: `SET LOCAL lock_timeout` (A-41) so a stuck transaction makes others fail fast with a retryable error instead of hanging.
+- Stale reads: the locking query reloads row values (`populate_existing`), so the ORM never returns numbers it read before the lock was taken. A test proves this.
+- Rejected: SERIALIZABLE isolation with retries (correct, but harder to explain and every caller must retry), optimistic version counters (retry storms on the last unit), application-level locks (do not work across server instances).
+
+## D-22 Services take `now` as a parameter
+
+- Chosen: one production clock (`app/core/clock.py`); services receive `now` from the caller.
+- Why: hold expiry and "today in IST" are testable without sleeping or patching time.
+- Rejected: the database's `now()` inside queries (consistent across servers, but hard to control in tests). Clock skew between app servers is negligible against a 10-minute hold.
+
+## D-23 Shared test builders
+
+- Chosen: `backend/tests/factories.py` holds small row builders used by all integration tests; pytest puts `backend/` on the import path (`pythonpath`).
+- Why: steps 4 to 7 need the same rooms, allotments and holds; one copy keeps the tests short and consistent.
+

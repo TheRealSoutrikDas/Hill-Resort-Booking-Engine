@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     business_timezone: str = "Asia/Kolkata"
     log_level: str = "INFO"
 
+    # Booking rules (A-38, A-39, A-41).
+    # Check-in may be any day from today up to booking_horizon_days - 1 days ahead,
+    # so the window is booking_horizon_days days long including today.
+    booking_horizon_days: int = Field(default=180, gt=0)
+    max_stay_nights: int = Field(default=14, gt=0)
+    # How long a booking waits for another booking's row lock before giving up.
+    lock_timeout_ms: int = Field(default=5_000, gt=0)
+
     # GST on room nights (A-08). Tested per room per night on the price actually charged:
     # at or below the threshold the low rate applies, above it the high rate.
     # Rates are in basis points (500 = 5%). Verify against current CBIC notifications.
