@@ -187,7 +187,27 @@ alembic downgrade base && alembic upgrade head && python -m app.seed --reset
 
 ## Enquiry evaluation
 
-`python -m app.eval_enquiries` (stage 5).
+Runs the sample enquiries in `backend/data/sample_enquiries.json` through the same rules
+the pipeline uses (keyword classifier, model, lane in code, GM alert rule) and prints a
+markdown report. Nothing is written to the database.
+
+```bash
+python -m app.eval_enquiries --backend keyword       # no model
+python -m app.eval_enquiries --backend both --out ../docs/eval/gemini-report.md
+```
+
+`--backend` is `configured` (the default, from `.env`), `keyword`, `gemini` or `both`.
+Calls to Gemini are spaced 4.5 seconds apart (`--delay`), so 27 enquiries take about two
+minutes. The command exits with an error if any enquiry that must alert the GM does not.
+The keyword figures are in-sample (its rules were written from these messages); the
+committed report is [docs/eval/keyword-report.md](docs/eval/keyword-report.md).
+
+To fill the demo inbox, seed with `--classify`: the sample enquiries then go through the
+pipeline with the configured backend and get lanes, drafts and GM alerts.
+
+```bash
+python -m app.seed --reset --classify
+```
 
 ## Documentation
 
