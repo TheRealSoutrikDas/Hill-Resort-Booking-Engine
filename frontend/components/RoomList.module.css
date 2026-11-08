@@ -1,0 +1,69 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.item {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
+.heading h3 {
+  margin: 0;
+}
+
+.meta {
+  color: var(--leaf);
+  font-size: var(--step--1);
+}
+
+.description {
+  margin: 0;
+}
+
+.problem {
+  padding: var(--space-3) var(--space-4);
+  background: var(--paper);
+  border-left: 4px solid var(--cherry);
+  border-radius: var(--radius);
+}
+
+.problem p {
+  margin: 0;
+}
+
+.skeleton {
+  min-height: 5.5rem;
+}
+
+.bar {
+  display: block;
+  height: 0.9rem;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+@media (min-width: 48rem) {
+  .item {
+    grid-template-columns: minmax(14rem, 1fr) 2fr;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  .heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

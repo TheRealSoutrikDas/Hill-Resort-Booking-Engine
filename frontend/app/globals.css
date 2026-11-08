@@ -1,0 +1,155 @@
+/* Design tokens (A-154). Colours from the estate itself: monsoon mist, shade-tree
+   green, leaf, and coffee-cherry red kept for the one main action on a screen. */
+:root {
+  --mist: #eef1ec;
+  --paper: #ffffff;
+  --canopy: #1f3b2d;
+  --leaf: #4e6b4f;
+  --cherry: #b3262e;
+  --cherry-dark: #8f1d24;
+  --line: #cfd8cd;
+  --danger-bg: #fbeaea;
+
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+
+  /* Type scale (1.25) */
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.563rem;
+  --step-3: 1.953rem;
+  --step-4: clamp(2.2rem, 5vw + 1rem, 3.6rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --space-6: 4rem;
+
+  --measure: 68ch;
+  --page: 72rem;
+  --radius: 6px;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--mist);
+  color: var(--canopy);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 var(--space-3);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--step-4);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: var(--step-3);
+}
+
+h3 {
+  font-size: var(--step-1);
+}
+
+p {
+  margin: 0 0 var(--space-3);
+  max-width: var(--measure);
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--cherry);
+  outline-offset: 2px;
+}
+
+.page {
+  width: 100%;
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+}
+
+.muted {
+  color: var(--leaf);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 48rem) {
+  .page {
+    padding: 0 var(--space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: -3rem;
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper);
+  border-radius: var(--radius);
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+}
+
+/* The main action on a screen. Cherry red is kept for this alone. */
+.button {
+  display: inline-block;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--cherry);
+  color: var(--paper);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--cherry-dark);
+}

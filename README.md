@@ -84,6 +84,40 @@ classification with `POST /api/enquiries/{reference}/verify` (the metrics then c
 what the AI decided with what the GM approved). Logs are JSON lines on
 stdout and never contain personal data.
 
+## Run the frontend
+
+From `frontend/`, with the API running on port 8000 (Node 22 or newer):
+
+```bash
+npm ci
+npm run dev            # http://localhost:3000, /api/* is forwarded to localhost:8000
+```
+
+The browser only talks to the frontend's own address; Next.js forwards `/api/*` to the
+backend, so session cookies stay on one site. For a production build, `API_URL` is
+required at build and start (the build fails without it):
+
+```bash
+API_URL=http://localhost:8000 npm run build
+API_URL=http://localhost:8000 npm run start
+```
+
+Checks:
+
+```bash
+npm run typecheck && npm run lint
+npx playwright install chromium   # once
+npm run test:e2e                  # needs the seeded backend running and a build
+```
+
+The TypeScript types for the API come from the backend's OpenAPI schema. After an API
+change (a backend test fails until you do this):
+
+```bash
+cd backend && python -m app.export_openapi > ../frontend/lib/openapi.json
+cd ../frontend && npm run api:types
+```
+
 ## Enquiry classifier
 
 By default (`CLASSIFIER_BACKEND=keyword`) enquiries are classified by keyword rules and no

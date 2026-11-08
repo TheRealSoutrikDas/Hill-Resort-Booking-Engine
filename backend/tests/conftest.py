@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import ENV_FILES, normalize_database_url
+from app.core.config import ENV_FILES, Settings, normalize_database_url
 from app.db.session import create_db_engine
 from app.services import passwords
 
@@ -27,6 +27,18 @@ class _TestSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILES, env_ignore_empty=True, extra="ignore")
 
     test_database_url: str | None = None
+
+
+@pytest.fixture(autouse=True)
+def clean_settings_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests see only the settings they set themselves. Without this, a variable exported
+    in the developer's shell (for example CLASSIFIER_BACKEND=gemini after
+    `source .env`) overrides a test's settings, and a test could even call Google.
+    The database URLs stay, because the suite needs them to find its database."""
+    keep = {"DATABASE_URL", "TEST_DATABASE_URL"}
+    for name in Settings.model_fields:
+        if name.upper() not in keep:
+            monkeypatch.delenv(name.upper(), raising=False)
 
 
 @pytest.fixture(autouse=True, scope="session")
