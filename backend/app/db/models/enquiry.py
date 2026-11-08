@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Numeric,
+    Sequence,
     String,
     Text,
     false,
@@ -31,6 +32,9 @@ from app.db.models.enums import (
     OwnerTeam,
     values_check,
 )
+
+# New enquiry references continue from ENQ-5001 (A-120); the sample enquiries keep theirs.
+ENQUIRY_REFERENCE_SEQUENCE = Sequence("enquiry_reference_seq", start=5001, metadata=Base.metadata)
 
 
 class Enquiry(Base):
@@ -86,6 +90,8 @@ class Enquiry(Base):
     # Raw outputs kept for comparison when staff correct a classification.
     model_output: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     keyword_output: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # Why the lane was chosen, for example ["low_confidence"] for Unsorted (D-42).
+    lane_reasons: Mapped[list[str]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
     draft_reply: Mapped[str | None] = mapped_column(Text)
     error: Mapped[str | None] = mapped_column(Text)
     classified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

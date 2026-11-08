@@ -120,6 +120,8 @@ def reset_database(session: Session) -> None:
     """Empty every application table and restart ids, inside the current transaction."""
     tables = ", ".join(table.name for table in Base.metadata.sorted_tables)
     session.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+    # Standalone sequences are not reset by TRUNCATE; new enquiries start at ENQ-5001.
+    session.execute(text("ALTER SEQUENCE enquiry_reference_seq RESTART WITH 5001"))
     # Forget objects loaded before the truncate; their rows no longer exist.
     session.expunge_all()
 
