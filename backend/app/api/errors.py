@@ -16,7 +16,14 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import request_id_var
+from app.services.enquiry_actions import (
+    AlertAlreadyAcknowledged,
+    AlertNotFound,
+    EnquiryActionRefused,
+    InvalidEnquiryAction,
+)
 from app.services.enquiry_inbox import EnquiryNotFound, ReclassifyNotAllowed
+from app.services.enquiry_metrics import InvalidMetricsRange
 from app.services.errors import (
     AllotmentTooLow,
     BlackoutBlocked,
@@ -91,6 +98,11 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     InvalidEnquiry: (422, "invalid_enquiry"),
     EnquiryNotFound: (404, "enquiry_not_found"),
     ReclassifyNotAllowed: (409, "already_handled"),
+    InvalidEnquiryAction: (422, "invalid_action"),
+    EnquiryActionRefused: (409, "action_refused"),
+    AlertNotFound: (404, "alert_not_found"),
+    AlertAlreadyAcknowledged: (409, "already_acknowledged"),
+    InvalidMetricsRange: (422, "invalid_range"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}
@@ -129,6 +141,8 @@ def _details(exc: DomainError) -> Any:
         }
     if isinstance(exc, AllotmentTooLow | BlackoutBlocked):
         return {"nights": exc.nights}
+    if isinstance(exc, InvalidEnquiryAction):
+        return exc.details
     if isinstance(exc, PromoCapTooLow):
         return {"used": exc.used, "reserved": exc.reserved, "minimum": exc.used + exc.reserved}
     return None

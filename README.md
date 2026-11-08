@@ -76,7 +76,10 @@ system, one row per booking line. Admin (reservations team and GM): `GET /api/ad
 `PUT /api/admin/rates`, `PUT /api/admin/allotment`, `PUT /api/admin/blackouts`,
 `GET` and `POST /api/admin/promos`, `PATCH /api/admin/promos/{code}`. Enquiry inbox (all
 staff): `GET /api/enquiries?lane=&status=`, `GET /api/enquiries/{reference}`,
-`POST /api/enquiries/{reference}/classify` (re-run). Logs are JSON lines on
+`POST /api/enquiries/{reference}/classify` (re-run), `PATCH /api/enquiries/{reference}`
+(correct), `POST /api/enquiries/{reference}/route`, `POST /api/enquiries/{reference}/reply`
+(simulated, nothing is sent), `GET /api/enquiries/metrics?from=&to=`, `GET /api/alerts`;
+the GM acknowledges alerts with `POST /api/alerts/{id}/ack`. Logs are JSON lines on
 stdout and never contain personal data.
 
 ## Demo logins

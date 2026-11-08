@@ -19,7 +19,16 @@ request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 # Extra fields a log call may attach. Anything else passed as `extra` is ignored, so a
 # careless log call cannot leak a field nobody reviewed.
-_ALLOWED_FIELDS = ("method", "route", "status", "duration_ms", "error_type", "error_at", "limit")
+_ALLOWED_FIELDS = (
+    "method",
+    "route",
+    "status",
+    "duration_ms",
+    "error_type",
+    "error_at",
+    "limit",
+    "reference",  # a booking or enquiry reference; not personal data
+)
 
 _SAFE_REQUEST_ID = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 

@@ -55,6 +55,7 @@ class EnquiryStatus(StrEnum):
     PENDING = "pending"
     CLASSIFIED = "classified"
     FAILED = "failed"
+    REPLIED = "replied"  # a staff member sent the reply (simulated, A-127)
 
 
 class EnquiryCategory(StrEnum):
