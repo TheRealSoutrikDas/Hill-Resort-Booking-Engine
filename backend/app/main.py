@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-from app.api import auth, bookings, exports, health, holds, lookup, me, rooms
+from app.api import admin, auth, bookings, exports, health, holds, lookup, me, rooms
 from app.api.errors import error_response, register_error_handlers
 from app.api.security import OriginCheckMiddleware
 from app.core.clock import utc_now
@@ -117,4 +117,5 @@ def create_app(
     app.include_router(bookings.router)
     app.include_router(exports.router)
     app.include_router(me.router)
+    app.include_router(admin.router)
     return app

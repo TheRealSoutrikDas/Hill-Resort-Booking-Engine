@@ -266,3 +266,13 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Prefill: the hold response carries the account's name, email and phone as `guest_suggestion` until guest details are saved, so booking step 2 opens filled in without another request. The details remain editable, and saving them never writes to the account.
 - Test evidence: matching bookings by email, dropping the current section, reversing the past or cancelled order, keeping the suggestion after details are saved, or allowing cancellation during a stay each makes tests fail.
 
+## D-39 Admin inventory changes go through the same locks as bookings
+
+- Routes: `GET /api/admin/inventory` (calendar: allotment, sold, held, available, blackout and rates per night), `PUT /api/admin/rates`, `PUT /api/admin/allotment`, `PUT /api/admin/blackouts`. Reservations team and GM only.
+- Allotment: missing nights are inserted first (`ON CONFLICT DO NOTHING`), then every night is locked with `lock_allotments`, in the same order as bookings (D-21). Only then are sold and active holds counted, so a guest's hold cannot slip in between the check and the change. Any night below sold plus holds rejects the whole change with per-night details (brief rule).
+- Blackouts lock the same rows and are refused while a guest holds rooms on those nights, because that guest would otherwise pay and be refunded (D-27). Confirmed bookings stay.
+- Rates are upserted; holds and bookings keep their stored prices (A-45). Optional weekdays let one call set weekend prices.
+- Every change writes one `audit_log` row with the old and new values.
+- Concurrency: a new scenario cuts the allotment while 9 guests race for holds; over 40 rounds the admin won 26 times and the guests 14, and the stock invariants held every time.
+- Test evidence: ignoring holds, skipping the row lock, dropping the physical cap, ignoring holds on blackout, ignoring weekdays, allowing past nights, admitting the events team or skipping the audit each makes tests fail.
+

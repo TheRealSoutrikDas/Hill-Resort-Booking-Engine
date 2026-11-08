@@ -71,7 +71,8 @@ All amounts are integer paise. Signed-in guest routes: `POST /api/holds`,
 `PUT /api/holds/{id}/guest`, `POST /api/holds/{id}/payment` (needs an `Idempotency-Key`
 header), `GET /api/bookings/{reference}`, `POST /api/bookings/{reference}/cancel`, `GET /api/me/bookings` (My bookings). Staff: `GET /api/exports/bookings.csv?date=YYYY-MM-DD`
 (reservations team and GM), the day's confirmations and cancellations for the reservation
-system, one row per booking line. Logs are JSON lines on
+system, one row per booking line. Admin (reservations team and GM): `GET /api/admin/inventory`,
+`PUT /api/admin/rates`, `PUT /api/admin/allotment`, `PUT /api/admin/blackouts`. Logs are JSON lines on
 stdout and never contain personal data.
 
 ## Demo logins

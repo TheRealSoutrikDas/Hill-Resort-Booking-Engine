@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.models import Booking, Hold, Payment, PromoCode
+from app.services.admin_inventory import set_allotment
 from app.services.bookings import (
     HOLD_ALREADY_PAID,
     HOLD_EXPIRED_SOLD_OUT,
@@ -21,9 +22,10 @@ from app.services.bookings import (
     cancel_booking,
     confirm_booking,
 )
-from app.services.errors import InvalidPromoCode, NotAvailable
+from app.services.errors import AllotmentTooLow, InvalidPromoCode, NotAvailable
 from app.services.holds import HoldLineRequest, HoldRequest, create_hold, set_guest_details
 from tests.factories import (
+    NIGHTS,
     NOW,
     RULES,
     STAY,
@@ -36,6 +38,7 @@ from tests.factories import (
     rate_plan,
     request,
     room_type,
+    staff,
 )
 from tests.parallel import Outcome, assert_stock_consistent, run_in_parallel
 
@@ -407,4 +410,40 @@ def test_ten_clicks_with_one_payment_key_charge_once(committed, round_) -> None:
     assert set(statuses) <= {CONFIRMED, PROCESSING} and CONFIRMED in statuses
     assert provider.captured_count == 1
     assert count(committed, Payment) == 1 and count(committed, Booking) == 1
+    check_stock(committed)
+
+
+# ---------- 9. an admin cuts the allotment while guests book ----------
+
+
+def test_admin_cuts_allotment_while_guests_hold(committed, round_) -> None:
+    with committed() as s, s.begin():
+        c = catalogue(s, dlx_web=5)
+        admin_id = staff(s, "desk@example.com", team="reservations").id
+        users = [guest(s).id for _ in range(GUESTS - 1)]
+        req = request(line(c.dlx, c.ro))
+
+    def cut(s: Session):
+        with s.begin():
+            return set_allotment(
+                s,
+                actor_id=admin_id,
+                room_type_code="DLX",
+                nights=NIGHTS,
+                total_for_web=2,
+                now=NOW,
+                lock_timeout_ms=RULES.lock_timeout_ms,
+            )
+
+    outcomes = run_in_parallel(
+        committed, [cut] + [lambda s, u=u: hold_step(s, u, req) for u in users]
+    )
+
+    unexpected = [e for e in errors(outcomes) if not isinstance(e, NotAvailable | AllotmentTooLow)]
+    assert not unexpected, unexpected
+    held = sum(o.error is None for o in outcomes[1:])
+    if outcomes[0].error is None:  # the cut won: at most 2 holds fit on top of it
+        assert held <= 2
+    else:  # guests got there first and held more than 2
+        assert held > 2
     check_stock(committed)
