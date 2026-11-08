@@ -44,8 +44,21 @@ jobs:
       - run: pytest
 
   frontend:
-    # Lint and next build arrive in stage 6.
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # The build only records where /api/* is forwarded; nothing is called (D-48).
+      API_URL: http://localhost:8000
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Frontend lint and build not configured yet."
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
