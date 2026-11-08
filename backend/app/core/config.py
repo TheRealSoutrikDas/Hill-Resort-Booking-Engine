@@ -8,7 +8,7 @@ from functools import lru_cache
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 ENV_FILES = ("../.env", ".env")
@@ -73,9 +73,13 @@ class Settings(BaseSettings):
     rate_enquiry_per_ip: int = Field(default=10, gt=0)
     rate_enquiry_per_ip_window_s: int = Field(default=3600, gt=0)
 
-    # Enquiry classification (A-114, A-115). "stub" is a clearly labelled stand-in for
-    # the LLM backend until step 22, which adds "llm" and removes the stub.
-    classifier_backend: Literal["keyword", "stub"] = "keyword"
+    # Enquiry classification (A-114, A-115). "keyword" runs without any model; "gemini"
+    # asks Google Gemini for a proposal, with the keyword result as fallback (A-130).
+    classifier_backend: Literal["keyword", "gemini"] = "keyword"
+    # Read from the environment only; SecretStr keeps it out of reprs and logs.
+    llm_api_key: SecretStr | None = None
+    llm_model: str = Field(default="gemini-3.5-flash-lite", pattern=r"^[a-z0-9.\-]{3,64}$")
+    llm_timeout_seconds: float = Field(default=8.0, gt=0, le=30)  # A-134
     classifier_confidence_threshold: float = Field(default=0.7, ge=0, le=1)
     enquiry_max_length: int = Field(default=2_000, gt=0)
 
@@ -114,6 +118,14 @@ class Settings(BaseSettings):
     def _check_gst_rates(self) -> "Settings":
         if self.gst_rate_low_bp > self.gst_rate_high_bp:
             raise ValueError("gst_rate_low_bp must not exceed gst_rate_high_bp")
+        return self
+
+    @model_validator(mode="after")
+    def _check_llm_key(self) -> "Settings":
+        # Fail at startup, not on the first enquiry (A-130).
+        has_key = self.llm_api_key is not None and self.llm_api_key.get_secret_value().strip()
+        if self.classifier_backend == "gemini" and not has_key:
+            raise ValueError("CLASSIFIER_BACKEND=gemini needs LLM_API_KEY")
         return self
 
 

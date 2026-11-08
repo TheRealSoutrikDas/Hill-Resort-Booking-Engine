@@ -1,8 +1,8 @@
-"""STUB: a stand-in for the LLM backend while the pipeline is built (brief: build order).
+"""Test double for a model backend (moved out of the app in step 22, D-45).
 
-It is labelled "stub" everywhere it appears (backend name, logs, inbox). It returns the
-keyword result relabelled, or simulates a failure so every pipeline path can be tested.
-Step 22 replaces it with the real LLM backend and deletes this file.
+`StubLLMClassifier` returns the keyword result relabelled "stub", or simulates a
+failure, so every pipeline path can be tested without a provider. The real backend
+(`app.classifiers.gemini`) is tested separately against a fake HTTP transport.
 """
 
 from dataclasses import replace
