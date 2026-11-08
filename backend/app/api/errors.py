@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import request_id_var
+from app.services.enquiry_inbox import EnquiryNotFound, ReclassifyNotAllowed
 from app.services.errors import (
     AllotmentTooLow,
     BlackoutBlocked,
@@ -88,6 +89,8 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     PromoCodeTaken: (409, "promo_code_taken"),
     PromoCapTooLow: (409, "cap_below_uses"),
     InvalidEnquiry: (422, "invalid_enquiry"),
+    EnquiryNotFound: (404, "enquiry_not_found"),
+    ReclassifyNotAllowed: (409, "already_handled"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}

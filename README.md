@@ -66,14 +66,17 @@ curl localhost:8000/health                        # {"status":"ok","database":"o
 ```
 
 Interactive API docs are at `http://localhost:8000/docs`. Public routes:
-`GET /api/rooms`, `GET /api/rooms/{code}`, `POST /api/quotes`, `POST /api/bookings/lookup`.
+`GET /api/rooms`, `GET /api/rooms/{code}`, `POST /api/quotes`, `POST /api/bookings/lookup`,
+`POST /api/enquiries` (the enquiry form; returns only a reference).
 All amounts are integer paise. Signed-in guest routes: `POST /api/holds`,
 `PUT /api/holds/{id}/guest`, `POST /api/holds/{id}/payment` (needs an `Idempotency-Key`
 header), `GET /api/bookings/{reference}`, `POST /api/bookings/{reference}/cancel`, `GET /api/me/bookings` (My bookings). Staff: `GET /api/exports/bookings.csv?date=YYYY-MM-DD`
 (reservations team and GM), the day's confirmations and cancellations for the reservation
 system, one row per booking line. Admin (reservations team and GM): `GET /api/admin/inventory`,
 `PUT /api/admin/rates`, `PUT /api/admin/allotment`, `PUT /api/admin/blackouts`,
-`GET` and `POST /api/admin/promos`, `PATCH /api/admin/promos/{code}`. Logs are JSON lines on
+`GET` and `POST /api/admin/promos`, `PATCH /api/admin/promos/{code}`. Enquiry inbox (all
+staff): `GET /api/enquiries?lane=&status=`, `GET /api/enquiries/{reference}`,
+`POST /api/enquiries/{reference}/classify` (re-run). Logs are JSON lines on
 stdout and never contain personal data.
 
 ## Demo logins
