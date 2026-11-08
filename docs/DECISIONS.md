@@ -295,3 +295,13 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Test evidence: making the noun "complaint" alert, letting a booking outrank a complaint, letting room words outrank events, dropping the year rollover, reading "may" as May, not counting "a child", or keeping a check-out without its check-in each makes tests fail.
 - No new dependency.
 
+## D-42 The enquiry pipeline: save first, model proposes, code decides
+
+- Order (brief): save the enquiry as pending in its own committed transaction; run the keyword classifier; call the model backend outside any transaction with only the message text; decide the lane in code; raise the GM alert; fill the draft in code; store everything. Any crash after saving marks the enquiry `failed` with an error code, and `run_pipeline` re-runs it (the retry action in step 21).
+- Failure handling: a timeout or provider error uses the keyword result, labelled `is_fallback` with the error code; output still invalid after one retry also uses the keyword result and sends the enquiry to Unsorted; any unexpected exception from a provider library is treated as a provider error.
+- Lanes: `decide_lane` is a pure function. Any of invalid output, confidence below the threshold, disagreement, category `other`, or missing required fields sends the enquiry to Unsorted, and the reasons are stored in `lane_reasons` so the inbox can show why.
+- GM alerts: raised when the keyword check or the model sees a complaint, regardless of lane or confidence, so a complaint alerts the GM even with the model down. One alert per enquiry; a re-run does not add another. (A test first only counted alerts; a mutation showed a re-run would have failed on the unique constraint, so the test now also checks the re-run succeeds.)
+- Drafts: placeholders filled from extracted fields and `quote_stay` (same price path as the website, never a promo). A value that cannot be worked out stays as a visible placeholder. The contact name is filled last, so a name like "{price_total}" is never expanded.
+- Stub: `StubLLMClassifier` (backend name `stub`) echoes the keyword result or simulates timeout, provider error and invalid output. It exists only until step 22, which removes it.
+- Test evidence: making the alert depend on the model, letting provider errors escape, losing a crashed enquiry, sending the contact name to the model, duplicating alerts on re-run, routing invalid output, treating keyword no-match as disagreement, leaving the name unfilled, or pricing sold-out dates each makes tests fail. The whole sample file is run through the pipeline with both backends and every expected lane and GM alert holds.
+
