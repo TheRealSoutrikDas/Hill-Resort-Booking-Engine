@@ -114,3 +114,4 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-104 | Admin | Rate changes affect new quotes only; rates can be set for chosen weekdays; rates are never deleted (allotment 0 or a blackout stops sales). | Confirmed |
 | A-105 | Admin | A promo's code and percent are fixed once created; only the on/off switch, end date and cap can change, and the cap cannot go below uses plus reserved uses. | Confirmed |
 | A-106 | Admin | Every admin change is written to the audit log: who, when, old values and new values. | Confirmed |
+| A-107 | Promo | New codes are 3 to 32 letters and digits (stored uppercase), give 1% to 90% off (a 100% code would make a zero-amount payment, which the payment flow does not accept), and cannot end in the past. A code is "usable today" when it is switched on, today is within its dates, and a use is left. | Proposed |

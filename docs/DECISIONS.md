@@ -276,3 +276,11 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Concurrency: a new scenario cuts the allotment while 9 guests race for holds; over 40 rounds the admin won 26 times and the guests 14, and the stock invariants held every time.
 - Test evidence: ignoring holds, skipping the row lock, dropping the physical cap, ignoring holds on blackout, ignoring weekdays, allowing past nights, admitting the events team or skipping the audit each makes tests fail.
 
+## D-40 Admin promo codes
+
+- Routes: `GET /api/admin/promos` (each code with uses, uses reserved by active holds, uses left and whether it works today), `POST /api/admin/promos`, `PATCH /api/admin/promos/{code}`. Reservations team and GM only.
+- Code and percent never change once created: the update model forbids those fields, so reports and past bookings stay clear. Only the switch, end date and cap change, and only the fields sent are changed (`max_uses: null` removes the cap).
+- Lowering the cap locks the promo row, the same lock a hold takes to reserve a use (D-30), then refuses any cap below uses plus reserved uses (A-105). A new concurrency scenario lowers a cap while 9 guests reserve uses on different nights; over 40 rounds the admin won 37 times and the guests 3, and uses plus reservations never exceeded the cap.
+- Every create and every real change is audited with old and new values; an update that changes nothing writes no audit row.
+- Test evidence: ignoring reserved uses, skipping the row lock, allowing 100%, failing to remove a cap, accepting a percent change silently, or auditing a no-op each makes tests fail.
+
