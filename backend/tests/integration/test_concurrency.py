@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.models import Booking, Hold, Payment, PromoCode
 from app.services.admin_inventory import set_allotment
+from app.services.admin_promos import update_promo
 from app.services.bookings import (
     HOLD_ALREADY_PAID,
     HOLD_EXPIRED_SOLD_OUT,
@@ -22,7 +23,7 @@ from app.services.bookings import (
     cancel_booking,
     confirm_booking,
 )
-from app.services.errors import AllotmentTooLow, InvalidPromoCode, NotAvailable
+from app.services.errors import AllotmentTooLow, InvalidPromoCode, NotAvailable, PromoCapTooLow
 from app.services.holds import HoldLineRequest, HoldRequest, create_hold, set_guest_details
 from tests.factories import (
     NIGHTS,
@@ -446,4 +447,57 @@ def test_admin_cuts_allotment_while_guests_hold(committed, round_) -> None:
         assert held <= 2
     else:  # guests got there first and held more than 2
         assert held > 2
+    check_stock(committed)
+
+
+# ---------- 10. an admin lowers a promo cap while guests reserve uses ----------
+
+
+def test_admin_lowers_promo_cap_while_guests_reserve(committed, round_) -> None:
+    """Different nights per guest, so only the promo row lock stands between them."""
+    with committed() as s, s.begin():
+        rt, rp = room_type(s, "DLX"), rate_plan(s, "RO")
+        nights = [STAY + timedelta(days=i) for i in range(GUESTS - 1)]
+        for night in nights:
+            allotment(s, rt, night, 1)
+            daily_rate(s, rt, rp, night, 600_000)
+        promo(s, "COFFEE20", 20, max_uses=10, used_count=2)
+        admin_id = staff(s, "desk@example.com", team="reservations").id
+        users = [guest(s).id for _ in range(GUESTS - 1)]
+
+    def lower(s: Session):
+        with s.begin():
+            return update_promo(
+                s,
+                actor_id=admin_id,
+                code="COFFEE20",
+                max_uses=4,
+                lock_timeout_ms=RULES.lock_timeout_ms,
+                today=NOW.date(),
+                now=NOW,
+            )
+
+    def reserve(s: Session, user_id: int, night: date):
+        with s.begin():
+            return create_hold(
+                s, user_id, stay(rt, rp, night, 1), now=NOW, rules=RULES, promo_code="COFFEE20"
+            )
+
+    outcomes = run_in_parallel(
+        committed,
+        [lower]
+        + [lambda s, u=u, n=n: reserve(s, u, n) for u, n in zip(users, nights, strict=True)],
+    )
+
+    unexpected = [
+        e for e in errors(outcomes) if not isinstance(e, InvalidPromoCode | PromoCapTooLow)
+    ]
+    assert not unexpected, unexpected
+    with committed() as s:
+        code = s.scalar(select(PromoCode).where(PromoCode.code == "COFFEE20"))
+        reserved = s.scalar(
+            select(func.count()).select_from(Hold).where(Hold.promo_code_id == code.id)
+        )
+        assert code.used_count + reserved <= code.max_uses
+        assert (code.max_uses == 4) == (outcomes[0].error is None)
     check_stock(committed)
