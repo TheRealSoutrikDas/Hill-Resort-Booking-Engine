@@ -284,3 +284,14 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Every create and every real change is audited with old and new values; an update that changes nothing writes no audit row.
 - Test evidence: ignoring reserved uses, skipping the row lock, allowing 100%, failing to remove a cap, accepting a percent change silently, or auditing a no-op each makes tests fail.
 
+## D-41 Classifier interface and the keyword classifier
+
+- Interface: `EnquiryClassifier.classify(message, received_on) -> ClassificationResult` with category, fields, owner, confidence, draft template, backend, `is_fallback`, error, plus `complaint_signal`. Backends are chosen by `CLASSIFIER_BACKEND` from step 20.
+- Fields are an `ExtractedFields` model with range checks, and `keep_plausible` drops dates outside a two-year window (and a check-out whose check-in was dropped). The LLM's fields go through the same checks in step 22.
+- Extraction is rule-based (A-108): ranges, single dates, relative days, bare months, guests (adults plus children, people words in four languages, team of, couple, room for N), nights, budgets in lakh and crore, and a room type hint. Unrecognised text leaves fields empty, never guessed.
+- Categories by keyword lists; weddings and offsites outrank room words because events mention rooms and nights; a complaint always wins. The complaint check uses problem words, so the injection sample does not alert the GM, and an injection phrase cannot suppress a real complaint's alert.
+- Draft templates hold no numbers; prices and dates arrive only through placeholders filled in code (step 20).
+- Honest measurement: 27 of 27 categories and every expected field are right on the sample file, but the rules were written from those messages, so that is in-sample. Separate tests use messages the rules were not written from; they exposed three gaps that were then fixed ("complain", "filthy", "cottage"). Two known limits are recorded in tests: a refund policy question raises a (cheap) GM alert, and events the lists do not know (a birthday) go to `other`.
+- Test evidence: making the noun "complaint" alert, letting a booking outrank a complaint, letting room words outrank events, dropping the year rollover, reading "may" as May, not counting "a child", or keeping a check-out without its check-in each makes tests fail.
+- No new dependency.
+
