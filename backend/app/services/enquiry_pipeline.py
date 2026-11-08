@@ -235,6 +235,17 @@ def propose(
     )
 
 
+def ai_eval_record(p: Proposal) -> dict:
+    return {
+        "category": p.final.category,
+        "lane": p.lane,
+        "fields": p.final.fields.model_dump(mode="json", exclude_none=True),
+        "confidence": round(p.final.confidence, 3),
+        "backend": p.final.backend,
+        "is_fallback": p.is_fallback,
+    }
+
+
 def run_pipeline(
     factory: sessionmaker[Session],
     enquiry_id: int,
@@ -296,6 +307,8 @@ def run_pipeline(
                 rules=rules,
             )
             enquiry.error = error
+            # The AI's own decision, kept unchanged for comparison with the GM's (A-145).
+            enquiry.ai_eval = ai_eval_record(p)
             enquiry.status = EnquiryStatus.CLASSIFIED  # step 7
             enquiry.classified_at = now
             enquiry.updated_at = now

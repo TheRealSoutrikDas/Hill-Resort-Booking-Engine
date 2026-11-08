@@ -78,6 +78,14 @@ def _require_open(enquiry: Enquiry) -> None:
         )
 
 
+def _require_unverified(enquiry: Enquiry) -> None:
+    """After the GM approves, the classification is the record of truth (A-145)."""
+    if enquiry.verified_at is not None:
+        raise EnquiryActionRefused(
+            "already_verified", "The GM has approved this classification; it can no longer change."
+        )
+
+
 def _assign(session: Session, enquiry: Enquiry, owner: str | None) -> None:
     """A-119: GM-owned enquiries go to the GM account; teams own their lane."""
     enquiry.owner_team = owner
@@ -108,6 +116,7 @@ def correct_enquiry(
     """Apply a staff correction. `field_changes` holds only the fields being changed
     (None clears one). Returns the names of what changed."""
     _require_open(enquiry)
+    _require_unverified(enquiry)
     old_fields = dict(enquiry.fields or {})
     merged = {**old_fields, **{k: v for k, v in field_changes.items()}}
     merged = {k: v for k, v in merged.items() if v is not None}
@@ -183,6 +192,7 @@ def reroute_enquiry(
     """Move the enquiry to another lane. The category is left as it was, so the history
     shows both what was classified and where staff put it."""
     _require_open(enquiry)
+    _require_unverified(enquiry)
     if lane == enquiry.lane:
         raise InvalidEnquiryAction("no_change", "The enquiry is already in that lane.")
     audit.record(
@@ -245,6 +255,39 @@ def reply_to_enquiry(
     logger.info(
         "enquiry reply recorded (simulated, not sent)", extra={"reference": enquiry.reference}
     )
+
+
+# ---------- GM approval (A-145, A-146) ----------
+
+
+def verify_enquiry(session: Session, enquiry: Enquiry, *, actor: User, now: datetime) -> None:
+    """The GM approves the classification as it stands (after any corrections). This
+    records `actual_eval`, the truth `ai_eval` is measured against. A reply is not an
+    approval (A-146), so a replied enquiry can still be approved."""
+    if enquiry.status not in (EnquiryStatus.CLASSIFIED, EnquiryStatus.REPLIED):
+        raise EnquiryActionRefused(
+            "not_classified", "This enquiry has not been classified yet; re-run it first."
+        )
+    _require_unverified(enquiry)
+    enquiry.actual_eval = {
+        "category": enquiry.category,
+        "lane": enquiry.lane,
+        "fields": dict(enquiry.fields or {}),
+    }
+    enquiry.verified_at = now
+    enquiry.verified_by = actor.id
+    enquiry.updated_at = now
+    audit.record(
+        session,
+        actor_id=actor.id,
+        entity_type=AUDIT_ENTITY,
+        entity_id=enquiry.reference,
+        action="verify",
+        old=enquiry.ai_eval,
+        new=enquiry.actual_eval,
+        now=now,
+    )
+    session.flush()
 
 
 # ---------- GM alerts (A-129) ----------

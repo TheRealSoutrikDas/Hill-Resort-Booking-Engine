@@ -8,8 +8,9 @@ from app.db.models.enums import EnquiryStatus
 from app.services.errors import DomainError
 
 AUDIT_ENTITY = "enquiry"
-# Staff actions that make a re-run unsafe: it would overwrite the person's work (A-125).
-STAFF_DECISIONS = ("correct", "reroute", "reply")
+# Staff actions that make a re-run unsafe: it would overwrite the person's work (A-125),
+# or the GM's approval (A-145).
+STAFF_DECISIONS = ("correct", "reroute", "reply", "verify")
 
 
 class EnquiryNotFound(DomainError):

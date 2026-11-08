@@ -79,7 +79,9 @@ staff): `GET /api/enquiries?lane=&status=`, `GET /api/enquiries/{reference}`,
 `POST /api/enquiries/{reference}/classify` (re-run), `PATCH /api/enquiries/{reference}`
 (correct), `POST /api/enquiries/{reference}/route`, `POST /api/enquiries/{reference}/reply`
 (simulated, nothing is sent), `GET /api/enquiries/metrics?from=&to=`, `GET /api/alerts`;
-the GM acknowledges alerts with `POST /api/alerts/{id}/ack`. Logs are JSON lines on
+the GM acknowledges alerts with `POST /api/alerts/{id}/ack` and approves a
+classification with `POST /api/enquiries/{reference}/verify` (the metrics then compare
+what the AI decided with what the GM approved). Logs are JSON lines on
 stdout and never contain personal data.
 
 ## Enquiry classifier
