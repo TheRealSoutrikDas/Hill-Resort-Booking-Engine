@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.classifiers.stub import StubLLMClassifier
 from app.core.logging import JsonFormatter
 from app.db.models import Enquiry
 from app.enquiry_samples import load_sample_enquiries
@@ -16,6 +15,7 @@ from app.seed.build import SeedContext, reset_database, seed
 from app.services import audit, enquiry_pipeline
 from tests.api.conftest import FRONTEND
 from tests.factories import RULES
+from tests.fakes import StubLLMClassifier
 
 IST = RULES.tz
 RECEIVED = date(2026, 11, 5)

@@ -10,7 +10,6 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.classifiers.stub import StubLLMClassifier
 from app.core.logging import JsonFormatter
 from app.db.models import Enquiry, User
 from app.enquiry_samples import load_sample_enquiries
@@ -18,6 +17,7 @@ from app.seed.build import SeedContext, reset_database, seed
 from app.services.enquiry_actions import EnquiryActionRefused, reply_to_enquiry
 from app.services.enquiry_inbox import get_enquiry
 from tests.factories import RULES
+from tests.fakes import StubLLMClassifier
 from tests.parallel import run_in_parallel
 
 IST = RULES.tz

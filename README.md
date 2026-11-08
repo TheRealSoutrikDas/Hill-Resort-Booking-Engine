@@ -82,6 +82,30 @@ staff): `GET /api/enquiries?lane=&status=`, `GET /api/enquiries/{reference}`,
 the GM acknowledges alerts with `POST /api/alerts/{id}/ack`. Logs are JSON lines on
 stdout and never contain personal data.
 
+## Enquiry classifier
+
+By default (`CLASSIFIER_BACKEND=keyword`) enquiries are classified by keyword rules and no
+model is called. To use Google Gemini, set in `.env`:
+
+```bash
+CLASSIFIER_BACKEND=gemini
+LLM_API_KEY=your-key-from-google-ai-studio
+# LLM_MODEL=gemini-3.5-flash-lite (default)
+```
+
+Only the message text and the date it arrived are sent to Google, never names, emails or
+phones. If Google is slow, down or rate limited, the keyword result is used and the
+enquiry is marked as a fallback. On Google's free tier, message text may be used by
+Google to improve its products; a real deployment should use the paid tier.
+
+To check your key works (outside the app):
+
+```bash
+curl -s -H "x-goog-api-key: $LLM_API_KEY" -H "Content-Type: application/json" \
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent" \
+  -d '{"contents":[{"parts":[{"text":"Say OK"}]}]}'
+```
+
 ## Demo logins
 
 After `python -m app.seed --reset`:

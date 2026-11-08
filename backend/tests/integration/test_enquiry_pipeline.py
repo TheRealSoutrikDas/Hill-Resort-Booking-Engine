@@ -9,7 +9,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.classifiers.keyword import KeywordClassifier
-from app.classifiers.stub import StubLLMClassifier
 from app.core.config import Settings
 from app.core.logging import JsonFormatter
 from app.db.models import Allotment, Enquiry, GmAlert, RatePlan, RoomType, User
@@ -21,6 +20,7 @@ from app.services.enquiry_pipeline import run_pipeline, submit_enquiry
 from app.services.errors import InvalidEnquiry
 from app.services.quotes import HoldLineRequest, HoldRequest, HoldRules, quote_stay
 from tests.factories import RULES
+from tests.fakes import StubLLMClassifier
 
 IST = RULES.tz
 RECEIVED = date(2026, 11, 5)  # the samples' received_on

@@ -89,8 +89,8 @@ class Enquiry(Base):
     owner_team: Mapped[str | None] = mapped_column(String(16))
     assigned_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(4, 3))
-    # Which classifier produced the result (for example llm or keyword). Not a CHECK,
-    # because the clearly labelled stub backend writes its own name during the build.
+    # Which classifier produced the result (gemini or keyword). Not a CHECK, so a new
+    # provider behind the adapter needs no migration; test doubles write their own name.
     backend: Mapped[str | None] = mapped_column(String(16))
     is_fallback: Mapped[bool] = mapped_column(Boolean, server_default=false())
     # Extracted fields after validation in code (check_in, guests, budget_inr, ...).
