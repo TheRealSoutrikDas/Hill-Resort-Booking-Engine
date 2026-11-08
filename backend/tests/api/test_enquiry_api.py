@@ -137,6 +137,7 @@ def test_inbox_lists_newest_first_with_lane_counts(client: TestClient) -> None:
         "unsorted",
         "pending",
         "failed",
+        "replied",
     }
 
 

@@ -314,3 +314,17 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Classifiers sit on app state (`keyword_classifier`, `model_backend`) behind dependencies, so tests swap the model backend without touching the code path.
 - Test evidence: removing the re-run guard, not counting a correction as staff work, opening the inbox to any signed-in user, or putting the form on another route's rate limit each makes tests fail.
 - No new dependency.
+
+## D-44 Staff actions: correct, re-route, reply, GM alerts and metrics
+
+- Routes: `PATCH /api/enquiries/{reference}` (correct), `POST .../route` (re-route), `POST .../reply` (simulated reply), `GET /api/enquiries/metrics`, `GET /api/alerts` and `POST /api/alerts/{id}/ack`.
+- Each action locks the enquiry row (`SELECT ... FOR UPDATE`) inside the request's single transaction, so two staff acting at once are applied in turn and the second sees the first's result. A concurrency test sends two replies at the same instant: exactly one is recorded, the other gets `already_replied`.
+- States: actions need status `classified`. A pending or failed enquiry is refused with `not_classified` (re-run it first), and a replied one with `already_replied`. Migration 0007 adds the status `replied` and the reply columns, with a CHECK that the text, time, sender and status are set together.
+- Corrections send only the changed fields (null clears one). The merged fields go through `ExtractedFields` and `keep_plausible`; anything they would reject or drop is refused with the field names, rather than silently changed. One audit row per changed value, under action `correct`, so the history shows exactly what a person changed and the original model output stays beside it.
+- `lane_reasons` stays as the pipeline's record after a correction or re-route, so "sent to Unsorted" in the metrics counts the pipeline's decisions, not the current lane.
+- Anything staff put in the complaint lane (by correction or re-route) raises a GM alert if the enquiry has none, keeping "every complaint alerts the GM" true however it got there.
+- Replies: the placeholder check matches only the template's placeholder names, so other braces in a reply are allowed. The audit row records the length, not the text, and the log line carries only the reference (added to the logging allow-list; a reference is not personal data).
+- Inbox counts per lane are now open work (classified, not yet replied), plus a `replied` count.
+- Metrics return each rate as count, out of, and value, so a small sample is visible. The median uses Postgres `percentile_cont`.
+- Test evidence: allowing a second reply, skipping the placeholder or plausibility checks, re-routing to complaint without an alert, not rebuilding the draft, acknowledging an alert twice, letting non-GM staff acknowledge, dropping the row lock, counting any correction as a category correction, or dropping the reply CHECK from migration 0007 each makes tests fail. (Alembic does not compare CHECK constraints, so a database-level test covers it.)
+- No new dependency.

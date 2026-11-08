@@ -58,6 +58,14 @@ class Enquiry(Base):
             "channel <> 'web' OR (consent_at IS NOT NULL AND consent_version IS NOT NULL)",
             name="web_consent",
         ),
+        # A reply is recorded whole: text, time and sender together, and only then is
+        # the status "replied" (A-127).
+        CheckConstraint(
+            "(reply_text IS NULL) = (replied_at IS NULL)"
+            " AND (replied_at IS NULL) = (replied_by IS NULL)"
+            " AND (status = 'replied') = (replied_at IS NOT NULL)",
+            name="reply_complete",
+        ),
         Index("ix_enquiries_lane_received_at", "lane", "received_at"),
     )
 
@@ -95,6 +103,10 @@ class Enquiry(Base):
     draft_reply: Mapped[str | None] = mapped_column(Text)
     error: Mapped[str | None] = mapped_column(Text)
     classified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The simulated reply (A-127): nothing is sent, but what staff sent is kept.
+    reply_text: Mapped[str | None] = mapped_column(Text)
+    replied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    replied_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = created_at_column()
     updated_at: Mapped[datetime] = updated_at_column()
 

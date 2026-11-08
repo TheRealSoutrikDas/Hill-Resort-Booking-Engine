@@ -23,6 +23,7 @@ from starlette.responses import Response
 from app.api import (
     admin,
     admin_promos,
+    alerts,
     auth,
     bookings,
     enquiries,
@@ -136,4 +137,5 @@ def create_app(
     app.include_router(admin.router)
     app.include_router(admin_promos.router)
     app.include_router(enquiries.router)
+    app.include_router(alerts.router)
     return app
