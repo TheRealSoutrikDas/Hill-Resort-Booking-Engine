@@ -107,3 +107,10 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-97 | My bookings | Only bookings made by the signed-in account are listed, never bookings matched by email (brief: the email is unverified). | Confirmed |
 | A-98 | Checkout | The hold carries a `guest_suggestion` from the account until guest details are saved; saving different details never changes the account. | Confirmed |
 | A-99 | My bookings | No pagination; at most the account's 100 most recent bookings. | Confirmed |
+| A-100 | Admin | Admin screens (rates, allotment, blackouts, promo codes) are for the reservations team and the GM. | Confirmed |
+| A-101 | Admin | Admin changes use inclusive date ranges of up to 366 nights, never in the past (IST); the calendar view shows up to 62 nights and may look back. | Confirmed |
+| A-102 | Admin | A new allotment must be at least sold plus active holds and at most the physical units on every night; any violation rejects the whole change, listing each night; missing nights are created. | Confirmed |
+| A-103 | Admin | Blacking out nights with an active hold is refused; confirmed bookings on blacked-out nights are honoured; reopening is always allowed. | Confirmed |
+| A-104 | Admin | Rate changes affect new quotes only; rates can be set for chosen weekdays; rates are never deleted (allotment 0 or a blackout stops sales). | Confirmed |
+| A-105 | Admin | A promo's code and percent are fixed once created; only the on/off switch, end date and cap can change, and the cap cannot go below uses plus reserved uses. | Confirmed |
+| A-106 | Admin | Every admin change is written to the audit log: who, when, old values and new values. | Confirmed |
