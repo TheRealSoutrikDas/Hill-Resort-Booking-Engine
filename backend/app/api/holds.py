@@ -17,7 +17,7 @@ from app.api.deps import Clock, DbSession, Now, Provider, Rules, SessionFactory
 from app.api.errors import ErrorResponse
 from app.api.schemas import PriceOut, StayIn, stored_price_out, to_request
 from app.api.security import GuestUser
-from app.db.models import Booking, Hold, PromoCode
+from app.db.models import Booking, Hold, PromoCode, User
 from app.db.models.enums import HoldStatus
 from app.services.checkout import pay_for_hold
 from app.services.holds import create_hold, get_owned_hold, release_hold, set_guest_details
@@ -40,6 +40,14 @@ class GuestDetails(BaseModel):
     phone: str
 
 
+class GuestSuggestion(BaseModel):
+    """The account's own details, to prefill booking step 2 (A-98). Editable."""
+
+    name: str
+    email: str
+    phone: str | None  # optional at sign-up
+
+
 class HoldOut(BaseModel):
     id: UUID
     status: Literal["active", "expired", "released", "converted"]
@@ -48,6 +56,8 @@ class HoldOut(BaseModel):
     check_out: date
     price: PriceOut
     guest: GuestDetails | None
+    # Until guest details are saved: the account's details to prefill the form.
+    guest_suggestion: GuestSuggestion | None
     booking_reference: str | None  # once paid
 
 
@@ -82,9 +92,14 @@ def hold_out(db: Session, hold: Hold, now: datetime) -> HoldOut:
         status = "expired"
     promo = db.get(PromoCode, hold.promo_code_id) if hold.promo_code_id else None
     reference = db.scalar(select(Booking.reference).where(Booking.hold_id == hold.id))
-    guest = None
+    guest, suggestion = None, None
     if hold.guest_name and hold.guest_email and hold.guest_phone:
         guest = GuestDetails(name=hold.guest_name, email=hold.guest_email, phone=hold.guest_phone)
+    else:
+        account = db.get(User, hold.user_id)
+        suggestion = GuestSuggestion(
+            name=account.full_name, email=account.email, phone=account.phone
+        )
     return HoldOut(
         id=hold.id,
         status=status,
@@ -93,6 +108,7 @@ def hold_out(db: Session, hold: Hold, now: datetime) -> HoldOut:
         check_out=hold.check_out,
         price=stored_price_out(db, hold.items, promo),
         guest=guest,
+        guest_suggestion=suggestion,
         booking_reference=reference,
     )
 
