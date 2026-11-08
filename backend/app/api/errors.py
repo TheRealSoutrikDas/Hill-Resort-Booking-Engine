@@ -37,6 +37,9 @@ from app.services.errors import (
     NotAvailable,
     PaymentMismatch,
     PaymentNotAllowed,
+    PromoCapTooLow,
+    PromoCodeTaken,
+    PromoNotFound,
     RateLimited,
     RoomTypeNotFound,
     StockLocked,
@@ -80,6 +83,9 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     InvalidAdminChange: (422, "invalid_admin_change"),
     AllotmentTooLow: (409, "allotment_below_commitments"),
     BlackoutBlocked: (409, "active_holds"),
+    PromoNotFound: (404, "promo_not_found"),
+    PromoCodeTaken: (409, "promo_code_taken"),
+    PromoCapTooLow: (409, "cap_below_uses"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}
@@ -118,6 +124,8 @@ def _details(exc: DomainError) -> Any:
         }
     if isinstance(exc, AllotmentTooLow | BlackoutBlocked):
         return {"nights": exc.nights}
+    if isinstance(exc, PromoCapTooLow):
+        return {"used": exc.used, "reserved": exc.reserved, "minimum": exc.used + exc.reserved}
     return None
 
 
