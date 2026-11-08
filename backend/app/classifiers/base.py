@@ -35,6 +35,8 @@ class ClassificationResult:
     # True when complaint words were seen, even if another category won. The GM alert
     # uses this, so it never depends on the model being available (A-110).
     complaint_signal: bool = False
+    # What the backend actually returned, kept for comparison when staff correct it.
+    raw_output: dict | None = None
 
 
 class EnquiryClassifier(Protocol):

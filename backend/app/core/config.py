@@ -73,6 +73,12 @@ class Settings(BaseSettings):
     rate_enquiry_per_ip: int = Field(default=10, gt=0)
     rate_enquiry_per_ip_window_s: int = Field(default=3600, gt=0)
 
+    # Enquiry classification (A-114, A-115). "stub" is a clearly labelled stand-in for
+    # the LLM backend until step 22, which adds "llm" and removes the stub.
+    classifier_backend: Literal["keyword", "stub"] = "keyword"
+    classifier_confidence_threshold: float = Field(default=0.7, ge=0, le=1)
+    enquiry_max_length: int = Field(default=2_000, gt=0)
+
     # Payment gateway adapter. Only the mock exists; payments are simulated (brief).
     payment_provider: Literal["mock"] = "mock"
 
