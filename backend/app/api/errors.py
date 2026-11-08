@@ -30,6 +30,7 @@ from app.services.errors import (
     InvalidAdminChange,
     InvalidBookingRequest,
     InvalidCredentials,
+    InvalidEnquiry,
     InvalidPromoCode,
     InvalidSignup,
     InvalidStay,
@@ -86,6 +87,7 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     PromoNotFound: (404, "promo_not_found"),
     PromoCodeTaken: (409, "promo_code_taken"),
     PromoCapTooLow: (409, "cap_below_uses"),
+    InvalidEnquiry: (422, "invalid_enquiry"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}

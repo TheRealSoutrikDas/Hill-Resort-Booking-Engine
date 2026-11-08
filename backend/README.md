@@ -13,6 +13,7 @@ app/db/             SQLAlchemy base, session and models (users, inventory, booki
 app/schemas/        Pydantic request and response models
 app/classifiers/    EnquiryClassifier interface, extracted fields, rule-based extraction,
                     draft templates, keyword backend (LLM backend in step 22)
+                    stub.py is a labelled stand-in for the LLM until step 22
 app/core/           Settings, logging, security, error format
 app/seed/           Demo data: plan.py (all numbers), build.py (writes rows), __main__.py (CLI)
 app/enquiry_samples.py  Validated loader for data/sample_enquiries.json

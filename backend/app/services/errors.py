@@ -177,3 +177,11 @@ class PromoCapTooLow(DomainError):
     def __init__(self, used: int, reserved: int) -> None:
         super().__init__("The cap cannot go below uses already made or reserved.")
         self.used, self.reserved = used, reserved
+
+
+class InvalidEnquiry(DomainError):
+    """The enquiry form breaks a rule (A-114). `code` says which."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
