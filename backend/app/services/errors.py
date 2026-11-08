@@ -135,3 +135,29 @@ class RateLimited(DomainError):
 
 class RoomTypeNotFound(DomainError):
     """No room type with this code."""
+
+
+class InvalidAdminChange(DomainError):
+    """An admin change breaks a rule (dates, ranges, units). `code` says which."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
+class AllotmentTooLow(DomainError):
+    """The new web allotment would be below what is sold or held on some nights (A-102)."""
+
+    def __init__(self, nights: list[dict]) -> None:
+        super().__init__("The allotment cannot go below what is already sold or held.")
+        self.nights = nights
+
+
+class BlackoutBlocked(DomainError):
+    """Guests are holding rooms on some of these nights; try again shortly (A-103)."""
+
+    def __init__(self, nights: list[dict]) -> None:
+        super().__init__(
+            "Guests are in checkout on some of these nights. Try again in a few minutes."
+        )
+        self.nights = nights

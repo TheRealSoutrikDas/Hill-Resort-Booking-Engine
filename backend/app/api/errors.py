@@ -17,6 +17,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import request_id_var
 from app.services.errors import (
+    AllotmentTooLow,
+    BlackoutBlocked,
     BookingNotFound,
     CancellationNotAllowed,
     CsrfFailed,
@@ -25,6 +27,7 @@ from app.services.errors import (
     Forbidden,
     HoldNotActive,
     HoldNotFound,
+    InvalidAdminChange,
     InvalidBookingRequest,
     InvalidCredentials,
     InvalidPromoCode,
@@ -74,6 +77,9 @@ STATUS_FOR: dict[type[DomainError], tuple[int, str]] = {
     InvalidSignup: (422, "invalid_signup"),
     RateLimited: (429, "rate_limited"),
     RoomTypeNotFound: (404, "room_type_not_found"),
+    InvalidAdminChange: (422, "invalid_admin_change"),
+    AllotmentTooLow: (409, "allotment_below_commitments"),
+    BlackoutBlocked: (409, "active_holds"),
 }
 
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}
@@ -110,6 +116,8 @@ def _details(exc: DomainError) -> Any:
                 for s in exc.shortfalls
             ]
         }
+    if isinstance(exc, AllotmentTooLow | BlackoutBlocked):
+        return {"nights": exc.nights}
     return None
 
 
