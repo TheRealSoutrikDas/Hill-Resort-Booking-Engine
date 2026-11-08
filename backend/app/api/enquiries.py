@@ -25,12 +25,17 @@ from app.api.deps import (
 )
 from app.api.errors import ErrorResponse
 from app.api.ratelimit import limit_per_ip
-from app.api.security import StaffUser
+from app.api.security import GmUser, StaffUser
 from app.db.models import Enquiry, GmAlert, User
 from app.db.models.enums import EnquiryCategory, EnquiryStatus, Lane
 from app.services import audit
 from app.services.dates import business_today
-from app.services.enquiry_actions import correct_enquiry, reply_to_enquiry, reroute_enquiry
+from app.services.enquiry_actions import (
+    correct_enquiry,
+    reply_to_enquiry,
+    reroute_enquiry,
+    verify_enquiry,
+)
 from app.services.enquiry_inbox import (
     AUDIT_ENTITY,
     ReclassifyNotAllowed,
@@ -200,6 +205,13 @@ class RateOut(BaseModel):
     value: float | None  # count / out_of, or null when out_of is 0
 
 
+class AiAccuracyOut(BaseModel):
+    approved: int
+    category: RateOut
+    lane: RateOut
+    fields: RateOut
+
+
 class MetricsOut(BaseModel):
     date_from: date
     date_to: date
@@ -212,6 +224,9 @@ class MetricsOut(BaseModel):
     fallback: RateOut
     category_corrected: RateOut
     median_minutes_to_reply: float | None
+    awaiting_approval: int
+    # The AI's decision against the GM's approval, per backend (A-145).
+    ai_accuracy: dict[str, AiAccuracyOut]
 
 
 @router.get("/metrics", response_model=MetricsOut, responses=STAFF_ERRORS)
@@ -242,6 +257,16 @@ def metrics(
         fallback=rate(m.fallback),
         category_corrected=rate(m.category_corrected),
         median_minutes_to_reply=m.median_minutes_to_reply,
+        awaiting_approval=m.awaiting_approval,
+        ai_accuracy={
+            label: AiAccuracyOut(
+                approved=a.approved,
+                category=rate(a.category),
+                lane=rate(a.lane),
+                fields=rate(a.fields),
+            )
+            for label, a in m.ai_accuracy.items()
+        },
     )
 
 
@@ -284,6 +309,11 @@ class EnquiryDetail(InboxItem):
     reply_text: str | None  # what staff sent (simulated, A-127)
     replied_at: datetime | None
     replied_by: str | None
+    ai_eval: dict | None  # what the AI decided, never changed by staff (A-145)
+    actual_eval: dict | None  # what the GM approved as right
+    verified_at: datetime | None
+    verified_by: str | None
+    can_verify: bool  # for the GM: classified or replied, not yet approved
 
 
 def detail(db: Session, enquiry: Enquiry) -> EnquiryDetail:
@@ -324,10 +354,16 @@ def detail(db: Session, enquiry: Enquiry) -> EnquiryDetail:
             for h in history(db, enquiry)
         ],
         can_reclassify=can_reclassify(db, enquiry),
-        can_act=enquiry.status == EnquiryStatus.CLASSIFIED,
+        can_act=enquiry.status == EnquiryStatus.CLASSIFIED and enquiry.verified_at is None,
         reply_text=enquiry.reply_text,
         replied_at=enquiry.replied_at,
         replied_by=names.get(enquiry.replied_by),
+        ai_eval=enquiry.ai_eval,
+        actual_eval=enquiry.actual_eval,
+        verified_at=enquiry.verified_at,
+        verified_by=names.get(enquiry.verified_by),
+        can_verify=enquiry.status in (EnquiryStatus.CLASSIFIED, EnquiryStatus.REPLIED)
+        and enquiry.verified_at is None,
     )
 
 
@@ -450,4 +486,12 @@ def reply(reference: str, body: ReplyIn, user: StaffUser, db: DbSession, now: No
     """Record the reply a staff member sends. Simulated: nothing is delivered (A-127)."""
     enquiry = get_enquiry(db, reference, lock=True)
     reply_to_enquiry(db, enquiry, actor=user, text=body.text, now=now)
+    return detail(db, enquiry)
+
+
+@router.post("/{reference}/verify", response_model=EnquiryDetail, responses=STAFF_ERRORS)
+def verify(reference: str, user: GmUser, db: DbSession, now: Now) -> EnquiryDetail:
+    """The GM approves the classification as it stands; it is then fixed (A-145)."""
+    enquiry = get_enquiry(db, reference, lock=True)
+    verify_enquiry(db, enquiry, actor=user, now=now)
     return detail(db, enquiry)

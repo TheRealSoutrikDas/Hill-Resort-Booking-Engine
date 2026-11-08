@@ -66,6 +66,12 @@ class Enquiry(Base):
             " AND (status = 'replied') = (replied_at IS NOT NULL)",
             name="reply_complete",
         ),
+        # An approval is recorded whole: what was approved, by whom and when (A-145).
+        CheckConstraint(
+            "(actual_eval IS NULL) = (verified_at IS NULL)"
+            " AND (verified_at IS NULL) = (verified_by IS NULL)",
+            name="verified_complete",
+        ),
         Index("ix_enquiries_lane_received_at", "lane", "received_at"),
     )
 
@@ -103,6 +109,13 @@ class Enquiry(Base):
     draft_reply: Mapped[str | None] = mapped_column(Text)
     error: Mapped[str | None] = mapped_column(Text)
     classified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # What the AI decided, written only by the pipeline (A-145): category, lane, fields,
+    # confidence, backend, is_fallback. Staff actions never change it.
+    ai_eval: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # What the GM approved as right: category, lane and fields at approval time.
+    actual_eval: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    verified_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     # The simulated reply (A-127): nothing is sent, but what staff sent is kept.
     reply_text: Mapped[str | None] = mapped_column(Text)
     replied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

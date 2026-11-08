@@ -31,9 +31,14 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
+class QuietServer(ThreadingHTTPServer):
+    def handle_error(self, request, client_address) -> None:
+        pass  # the timeout test hangs up early, so the server's late write fails; expected
+
+
 @pytest.fixture(scope="module")
 def server():
-    httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    httpd = QuietServer(("127.0.0.1", 0), Handler)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     thread.start()
     yield f"http://127.0.0.1:{httpd.server_address[1]}"

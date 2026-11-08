@@ -352,3 +352,15 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - A missing key gives a one-line message and exit code 2 from both commands, not a traceback.
 - Test evidence: making the gate never fail, letting every lane pass, scoring alerts from the category instead of the shared rule, pausing before the first call, leaking message text into the report, dropping the model from the shared alert rule, or re-running already classified enquiries each makes tests fail.
 - No new dependency.
+
+## D-47 AI eval against actual eval on real enquiries
+
+- Proposed by the project owner: keep what the AI decided and what a person confirmed, so AI accuracy is measured on real enquiries, not only the sample file (D-46). The share of corrections alone is not enough, because an enquiry nobody corrected is not necessarily one the AI got right; someone has to say so.
+- `ai_eval` (JSONB) is written only by the pipeline, at classification: category, lane, fields, confidence, backend, `is_fallback`. Staff actions never touch it; a re-run, allowed only before anyone has acted (A-125), replaces it.
+- `POST /api/enquiries/{reference}/verify`, GM only (A-145): records `actual_eval` (category, lane, fields as they stand) with `verified_by` and `verified_at`, and audits `verify` with both records. A CHECK keeps the three columns set together. A reply is not an approval (A-146).
+- Approval fixes the classification (A-149): "verify" joins the staff decisions that block a re-run, and corrections and re-routes check `_require_unverified`.
+- Metrics gain `awaiting_approval` and `ai_accuracy` per backend (A-150): category, lane and fields matches as count out of approved. Keyword fallbacks are labelled "keyword (fallback)", so the model is not credited or blamed for answers it did not give. The comparison is a small pure function with its own test.
+- Two measures, one story for the TDD: the sample-file report is the test before go-live; `ai_accuracy` is quality in production, as judged by the GM.
+- Trade-off: accuracy needs the GM to approve enquiries; until they do, `awaiting_approval` shows how much is unmeasured.
+- Test evidence: letting other staff approve, allowing corrections or re-runs after approval, treating a reply as approval, letting a correction rewrite `ai_eval`, counting every approved enquiry as right, crediting fallbacks to the model, approving a pending enquiry, or dropping the CHECK from migration 0008 each makes tests fail.
+- No new dependency.
