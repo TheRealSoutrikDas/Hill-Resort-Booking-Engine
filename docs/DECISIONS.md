@@ -259,3 +259,10 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Safety: spreadsheet formula injection is neutralised in free-text cells (name, email); phones are already limited to digits, spaces and a leading `+`. `Cache-Control: no-store` because the file holds personal data. Access is the reservations team and the GM only.
 - Test evidence: using current status, current payment status, UTC days, no neutralising, an unstable order, any staff team, or a cacheable response each makes tests fail.
 
+## D-38 My bookings and checkout prefill
+
+- `GET /api/me/bookings` returns the account's bookings with a `section` (upcoming, current, past, cancelled) already worked out on the server, so the frontend's tabs need no date logic and agree with the server's idea of "today" in IST.
+- Ownership, not email: the list is `bookings.user_id = this account`. A booking made by another account that names this account's email as the guest's is not shown, which is the brief's "do not attach old bookings automatically, since the email is unverified". A test proves it.
+- Prefill: the hold response carries the account's name, email and phone as `guest_suggestion` until guest details are saved, so booking step 2 opens filled in without another request. The details remain editable, and saving them never writes to the account.
+- Test evidence: matching bookings by email, dropping the current section, reversing the past or cancelled order, keeping the suggestion after details are saved, or allowing cancellation during a stay each makes tests fail.
+

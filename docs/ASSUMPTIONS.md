@@ -103,3 +103,7 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-93 | Export | `payment_status` is the event (`paid` or `refund`), not the payment's current state; `payment_reference` is the gateway's. | Confirmed |
 | A-94 | Export | Dates are ISO; `created_at` is the confirmation time in IST with its offset. | Confirmed |
 | A-95 | Export | UTF-8, header row, standard quoting, CRLF. Name and email cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading apostrophe. Served with `Cache-Control: no-store`. | Confirmed |
+| A-96 | My bookings | Bookings are grouped into upcoming (soonest first), current (staying now), past (most recent first) and cancelled (most recently cancelled first), judged by today's IST date. | Confirmed |
+| A-97 | My bookings | Only bookings made by the signed-in account are listed, never bookings matched by email (brief: the email is unverified). | Confirmed |
+| A-98 | Checkout | The hold carries a `guest_suggestion` from the account until guest details are saved; saving different details never changes the account. | Confirmed |
+| A-99 | My bookings | No pagination; at most the account's 100 most recent bookings. | Confirmed |
