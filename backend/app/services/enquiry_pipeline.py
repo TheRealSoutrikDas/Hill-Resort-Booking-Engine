@@ -179,6 +179,62 @@ def _ask_model(
         return None, "provider_error", False
 
 
+@dataclass(frozen=True)
+class Proposal:
+    """Pipeline steps 2 to 5 for one message, before anything is stored. The evaluation
+    command uses the same function, so it measures the real rules (D-46)."""
+
+    keyword: ClassificationResult
+    model: ClassificationResult | None
+    error: str | None
+    invalid_output: bool
+    final: ClassificationResult
+    is_fallback: bool
+    lane: str
+    reasons: list[str]
+    complaint_by: list[str]  # which checks saw a complaint; non-empty means a GM alert
+
+
+def complaint_sources(
+    keyword_result: ClassificationResult, model_result: ClassificationResult | None
+) -> list[str]:
+    """Step 5: the GM alert never depends on the model alone (A-110)."""
+    seen = (
+        ("keyword", keyword_result.complaint_signal),
+        ("model", model_result is not None and model_result.category == EnquiryCategory.COMPLAINT),
+    )
+    return [source for source, hit in seen if hit]
+
+
+def propose(
+    message: str,
+    received_on,
+    *,
+    keyword: EnquiryClassifier,
+    model: EnquiryClassifier,
+    threshold: float,
+) -> Proposal:
+    keyword_result = keyword.classify(message, received_on)  # step 2
+    model_result, error, invalid = None, None, False
+    if model.name != keyword.name:  # step 3: only the message text is sent
+        model_result, error, invalid = _ask_model(model, message, received_on)
+    final = model_result or keyword_result
+    lane, reasons = decide_lane(  # step 4
+        final, keyword_result, model_result, invalid_output=invalid, threshold=threshold
+    )
+    return Proposal(
+        keyword=keyword_result,
+        model=model_result,
+        error=error,
+        invalid_output=invalid,
+        final=final,
+        is_fallback=model.name != keyword.name and model_result is None,
+        lane=lane,
+        reasons=reasons,
+        complaint_by=complaint_sources(keyword_result, model_result),
+    )
+
+
 def run_pipeline(
     factory: sessionmaker[Session],
     enquiry_id: int,
@@ -196,31 +252,21 @@ def run_pipeline(
             message, received_at = enquiry.message, enquiry.received_at
         received_on = received_at.astimezone(rules.tz).date()
 
-        keyword_result = keyword.classify(message, received_on)  # step 2
-        model_result, error, invalid = None, None, False
-        if model.name != keyword.name:  # step 3: only the message text is sent
-            model_result, error, invalid = _ask_model(model, message, received_on)
-        final = model_result or keyword_result
-        is_fallback = model.name != keyword.name and model_result is None
-
-        lane, reasons = decide_lane(  # step 4
-            final,
-            keyword_result,
-            model_result,
-            invalid_output=invalid,
+        p = propose(
+            message,
+            received_on,
+            keyword=keyword,
+            model=model,
             threshold=settings.classifier_confidence_threshold,
         )
-        complaint_by = [  # step 5: never depends on the model alone
-            source
-            for source, seen in (
-                ("keyword", keyword_result.complaint_signal),
-                (
-                    "model",
-                    model_result is not None and model_result.category == EnquiryCategory.COMPLAINT,
-                ),
-            )
-            if seen
-        ]
+        keyword_result, model_result, error = p.keyword, p.model, p.error
+        final, is_fallback, lane, reasons, complaint_by = (
+            p.final,
+            p.is_fallback,
+            p.lane,
+            p.reasons,
+            p.complaint_by,
+        )
 
         with factory() as session, session.begin():
             now = clock()
@@ -308,3 +354,35 @@ def submit_enquiry(
     return run_pipeline(
         factory, enquiry_id, keyword=keyword, model=model, settings=settings, clock=clock
     )
+
+
+def classify_pending(
+    factory: sessionmaker[Session],
+    *,
+    keyword: EnquiryClassifier,
+    model: EnquiryClassifier,
+    settings: Settings,
+    clock: Clock,
+    delay_s: float = 0.0,
+    sleep: Callable[[float], None] | None = None,
+) -> list[PipelineOutcome]:
+    """Run every pending enquiry through the pipeline, oldest first (seed --classify,
+    A-143). Model calls are spaced by `delay_s` to respect provider limits (A-141)."""
+    with factory() as session:
+        ids = list(
+            session.scalars(
+                select(Enquiry.id)
+                .where(Enquiry.status == EnquiryStatus.PENDING)
+                .order_by(Enquiry.received_at, Enquiry.id)
+            )
+        )
+    outcomes = []
+    for index, enquiry_id in enumerate(ids):
+        if index and delay_s and model.name != keyword.name and sleep is not None:
+            sleep(delay_s)
+        outcomes.append(
+            run_pipeline(
+                factory, enquiry_id, keyword=keyword, model=model, settings=settings, clock=clock
+            )
+        )
+    return outcomes

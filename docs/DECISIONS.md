@@ -341,3 +341,14 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Not verified from this workspace: a live call to Google (the workspace cannot reach it). The README has a one-line live check; accuracy on the sample file is measured in step 23.
 - Test evidence: removing the retry, retrying twice, skipping the confidence range or finish reason check, skipping the plausibility check, putting the key in the URL, chaining the provider error, passing the raw error text on, dropping the startup key check, or sending contact details each makes tests fail. Dropping the unknown-key filter does not, because `ExtractedFields` forbids extra keys as well: two layers on purpose.
 - No new dependency.
+
+## D-46 Evaluating the classifier on the sample file
+
+- One source of rules: `propose()` in the pipeline holds steps 2 to 5 (keyword classifier, model call with fallback, lane in code, the GM alert rule in `complaint_sources`). `run_pipeline` and `python -m app.eval_enquiries` both call it, so the evaluation cannot drift from what production does.
+- The command is a developer tool, not a feature: it runs in memory, prints markdown and can write it to a file (A-138). It reports per enquiry and in total: category, lane, required and false GM alerts, fields right, fallbacks and median time per enquiry for a model.
+- The only gate is a missed required GM alert (exit 1). Everything else is reported for people to judge, with each figure as a count out of a total (A-140).
+- Honesty: the keyword rules were written from these messages, so its 27 of 27 is in-sample and the report says so. Gemini was not tuned on them, so its report is the fairer measure; it is run with the owner's key because this workspace cannot reach Google.
+- `seed --classify` uses `classify_pending`, which runs the real pipeline on every pending enquiry, oldest first, paced for model limits. The demo inbox then shows lanes, drafts and GM alerts.
+- A missing key gives a one-line message and exit code 2 from both commands, not a traceback.
+- Test evidence: making the gate never fail, letting every lane pass, scoring alerts from the category instead of the shared rule, pausing before the first call, leaking message text into the report, dropping the model from the shared alert rule, or re-running already classified enquiries each makes tests fail.
+- No new dependency.

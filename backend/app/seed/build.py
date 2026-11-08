@@ -523,7 +523,7 @@ def _seed_enquiries(
                 consent_at=received_at if channel == "web" else None,
                 consent_version=plan.CONSENT_VERSION if channel == "web" else None,
                 received_at=received_at,
-                # Classified by the pipeline in step 23; until then every enquiry is pending.
+                # Saved pending, as the form does; `--classify` runs them through the pipeline.
                 status="pending",
                 created_at=received_at,
                 updated_at=received_at,

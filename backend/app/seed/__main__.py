@@ -2,6 +2,8 @@
 
     python -m app.seed --reset                 # empty all tables, then seed
     python -m app.seed --reset --today 2026-11-07   # pretend today is that date
+    python -m app.seed --reset --classify      # also run the sample enquiries through
+                                               # the pipeline (configured backend)
 
 Run `alembic upgrade head` first. Without --reset the command refuses to touch a
 database that already has data. Everything happens in one transaction: if anything
@@ -10,8 +12,10 @@ fails, nothing is written.
 
 import argparse
 import sys
+from collections import Counter
 from datetime import UTC, date, datetime, time
 from pathlib import Path
+from time import sleep
 from zoneinfo import ZoneInfo
 
 from alembic.config import Config
@@ -20,10 +24,13 @@ from alembic.script import ScriptDirectory
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
+from app.classifiers.keyword import KeywordClassifier
+from app.classifiers.registry import get_model_backend
 from app.core.config import get_settings
-from app.db.session import get_engine
+from app.db.session import get_engine, get_session_factory
 from app.enquiry_samples import load_sample_enquiries
 from app.seed.build import SeedContext, SeedError, database_has_data, reset_database, seed
+from app.services.enquiry_pipeline import classify_pending
 from app.services.pricing import GstRule
 
 ALEMBIC_INI = Path(__file__).resolve().parents[2] / "alembic.ini"
@@ -36,6 +43,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--today",
         type=date.fromisoformat,
         help="business date to seed relative to (YYYY-MM-DD); default is today",
+    )
+    parser.add_argument(
+        "--classify",
+        action="store_true",
+        help="after seeding, classify the sample enquiries with CLASSIFIER_BACKEND",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=4.5,
+        help="seconds between model calls with --classify (A-141)",
     )
     return parser.parse_args(argv)
 
@@ -64,6 +82,13 @@ def build_context(today: date | None) -> SeedContext:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    try:
+        get_settings()
+    except ValueError as exc:  # for example CLASSIFIER_BACKEND=gemini without a key
+        errors = getattr(exc, "errors", None)
+        reason = errors()[0]["msg"].removeprefix("Value error, ") if errors else str(exc)
+        print(f"Seed failed, nothing was written: {reason}", file=sys.stderr)
+        return 2
     engine = get_engine()
     target = engine.url.render_as_string(hide_password=True)
     try:
@@ -91,7 +116,27 @@ def main(argv: list[str] | None = None) -> int:
         f"  bookings: {summary.bookings_confirmed} confirmed, "
         f"{summary.bookings_cancelled} cancelled"
     )
-    print(f"  enquiries: {summary.enquiries} (pending until the pipeline exists)")
+    if args.classify:
+        settings = get_settings()
+        model = get_model_backend(settings)
+        print(f"  classifying {summary.enquiries} enquiries with {model.name}...", flush=True)
+        outcomes = classify_pending(
+            get_session_factory(),
+            keyword=KeywordClassifier(),
+            model=model,
+            settings=settings,
+            clock=lambda: ctx.now,
+            delay_s=args.delay,
+            sleep=sleep,
+        )
+        lanes = Counter(o.lane or o.status for o in outcomes)
+        alerts = sum(1 for o in outcomes if o.gm_alert)
+        fallbacks = sum(1 for o in outcomes if o.is_fallback)
+        shown = ", ".join(f"{lane} {n}" for lane, n in sorted(lanes.items()))
+        print(f"  enquiries: {summary.enquiries} classified ({shown})")
+        print(f"  GM alerts: {alerts}, keyword fallbacks: {fallbacks}")
+    else:
+        print(f"  enquiries: {summary.enquiries} pending (add --classify to run the pipeline)")
     print(f"  one unit left (Family Suite): Fri {summary.one_left_friday} and Sat")
     print(f"  sold out (all room types): Fri {summary.sold_out_friday} and Sat")
     print(f"  blackout: 3 nights from Mon {summary.blackout_start}")
