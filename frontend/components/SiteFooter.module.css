@@ -1,0 +1,11 @@
+.footer {
+  margin-top: var(--space-6);
+  padding-block: var(--space-5);
+  background: var(--canopy);
+  color: var(--mist);
+  font-size: var(--step--1);
+}
+
+.demo {
+  opacity: 0.8;
+}

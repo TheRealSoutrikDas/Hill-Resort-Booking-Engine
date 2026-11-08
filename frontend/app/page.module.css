@@ -1,0 +1,30 @@
+.hero {
+  position: relative;
+  background: linear-gradient(var(--mist), #dfe7dc);
+  overflow: hidden;
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--space-6) 0;
+}
+
+.heroText h1 {
+  max-width: 16ch;
+}
+
+.lede {
+  font-size: var(--step-1);
+  max-width: 44ch;
+}
+
+.hills {
+  display: block;
+  width: 100%;
+  height: clamp(9rem, 26vw, 20rem);
+}
+
+.section {
+  padding-block: var(--space-5) 0;
+}

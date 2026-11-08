@@ -96,7 +96,7 @@ def create_app(
     configure_logging(settings.log_level)
 
     app = FastAPI(
-        title="Hill Resort API",
+        title="CompanyA Resort API",
         version="0.1.0",
         generate_unique_id_function=_operation_id,
     )

@@ -34,3 +34,10 @@ pgdata/
 Thumbs.db
 .idea/
 .vscode/
+
+# Written by `next dev` itself, not part of this project
+frontend/AGENTS.md
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
