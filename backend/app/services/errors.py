@@ -161,3 +161,19 @@ class BlackoutBlocked(DomainError):
             "Guests are in checkout on some of these nights. Try again in a few minutes."
         )
         self.nights = nights
+
+
+class PromoNotFound(DomainError):
+    """No promo code with this code."""
+
+
+class PromoCodeTaken(DomainError):
+    """A promo code with this code already exists."""
+
+
+class PromoCapTooLow(DomainError):
+    """The usage cap would be below uses already counted plus uses reserved by holds (A-105)."""
+
+    def __init__(self, used: int, reserved: int) -> None:
+        super().__init__("The cap cannot go below uses already made or reserved.")
+        self.used, self.reserved = used, reserved
