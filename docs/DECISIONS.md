@@ -305,3 +305,12 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Stub: `StubLLMClassifier` (backend name `stub`) echoes the keyword result or simulates timeout, provider error and invalid output. It exists only until step 22, which removes it.
 - Test evidence: making the alert depend on the model, letting provider errors escape, losing a crashed enquiry, sending the contact name to the model, duplicating alerts on re-run, routing invalid output, treating keyword no-match as disagreement, leaving the name unfilled, or pricing sold-out dates each makes tests fail. The whole sample file is run through the pipeline with both backends and every expected lane and GM alert holds.
 
+## D-43 Enquiry API: public form, inbox, detail and re-run
+
+- Public form: `POST /api/enquiries` saves first and runs the pipeline in the request (D-42), then returns `201` with the reference only (A-122). It is rate limited per IP with its own limit, rejects unknown fields, and goes through the same Origin check as every other state-changing route. A model outage still saves and routes the enquiry with the keyword result.
+- Inbox: `GET /api/enquiries` for any staff role (A-123), newest first, at most 200 rows, with a 140-character snippet and counts per lane plus pending and failed, so the frontend can show lane tabs without extra calls.
+- Detail: `GET /api/enquiries/{reference}` shows the original message beside the extracted fields (brief), both classifier outputs, the lane reasons, the draft, the GM alert and the audit history with staff names. References are case-insensitive.
+- Re-run: `POST /api/enquiries/{reference}/classify` runs `run_pipeline` again. The rule in A-125 lives in `enquiry_inbox.can_reclassify`, which counts audit rows with the staff actions `correct`, `reroute` and `reply` that step 21b writes.
+- Classifiers sit on app state (`keyword_classifier`, `model_backend`) behind dependencies, so tests swap the model backend without touching the code path.
+- Test evidence: removing the re-run guard, not counting a correction as staff work, opening the inbox to any signed-in user, or putting the form on another route's rate limit each makes tests fail.
+- No new dependency.

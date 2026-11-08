@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.classifiers.base import EnquiryClassifier
 from app.core.config import Settings
 from app.services.payments.provider import PaymentProvider
 from app.services.quotes import HoldRules
@@ -33,6 +34,15 @@ def get_payment_provider_dep(request: Request) -> PaymentProvider:
     return request.app.state.payment_provider
 
 
+def get_keyword_classifier(request: Request) -> EnquiryClassifier:
+    return request.app.state.keyword_classifier
+
+
+def get_model_backend_dep(request: Request) -> EnquiryClassifier:
+    """The model classifier chosen by CLASSIFIER_BACKEND (A-113); swapped in tests."""
+    return request.app.state.model_backend
+
+
 def get_session_factory_dep(request: Request) -> sessionmaker[Session]:
     """For code that manages its own transactions, such as checkout (D-31)."""
     return request.app.state.session_factory
@@ -53,3 +63,5 @@ Now = Annotated[datetime, Depends(get_now)]
 Rules = Annotated[HoldRules, Depends(get_rules)]
 Clock = Annotated[Callable[[], datetime], Depends(get_clock)]
 Provider = Annotated[PaymentProvider, Depends(get_payment_provider_dep)]
+KeywordBackend = Annotated[EnquiryClassifier, Depends(get_keyword_classifier)]
+ModelBackend = Annotated[EnquiryClassifier, Depends(get_model_backend_dep)]
