@@ -41,11 +41,17 @@ Two things keep state in the backend process's memory:
 So run one instance with one worker, and turn off autoscaling:
 
 ```bash
-uvicorn app.main:create_app --factory --host 0.0.0.0 --port "$PORT" --workers 1
+uvicorn app.main:create_app --factory --host 0.0.0.0 --port "$PORT" --workers 1 --timeout-keep-alive 65
 ```
 
 A shared store (Redis) is the usual fix and is out of scope (brief). Storing the counts
 in Postgres would also work, at the cost of a database write per attempt.
+
+`--timeout-keep-alive 65` matters whenever a proxy sits in front of uvicorn (the Next.js
+proxy here, and usually the host's load balancer). uvicorn closes an idle connection
+after 5 seconds by default; a proxy that reuses that connection at the same moment gets
+`ECONNRESET` and the request fails (D-56). The backend's idle timeout must be longer
+than the proxy's.
 
 ## Client IPs behind the proxy (A-81)
 
