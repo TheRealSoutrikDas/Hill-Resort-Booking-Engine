@@ -1,0 +1,56 @@
+erDiagram
+  room_types ||--o{ allotments : "per night"
+  room_types ||--o{ daily_rates : "per night"
+  rate_plans ||--o{ daily_rates : "per night"
+  users ||--o{ sessions : has
+  users ||--o{ holds : creates
+  promo_codes |o--o{ holds : "may use"
+  holds ||--|{ hold_items : lines
+  hold_items ||--|{ hold_item_nights : "price per night"
+  holds ||--o{ payments : "idempotency key"
+  holds ||--o| bookings : "becomes"
+  payments ||--o| bookings : pays
+  bookings ||--|{ booking_items : lines
+  enquiries ||--o| gm_alerts : "complaint"
+  users ||--o{ audit_log : "acts"
+  allotments {
+    date stay_date PK
+    int total_for_web
+    int sold "CHECK sold <= total_for_web"
+    bool is_blackout
+  }
+  daily_rates {
+    date stay_date PK
+    bigint price_paise
+  }
+  holds {
+    uuid id PK
+    string status
+    timestamptz expires_at "10 minutes"
+    bigint total_paise
+  }
+  hold_item_nights {
+    date stay_date PK
+    bigint rate_paise
+    bigint tax_paise
+    int tax_rate_bp
+  }
+  payments {
+    string idempotency_key UK
+    string status
+  }
+  bookings {
+    string reference UK
+    string status
+    bigint total_paise
+  }
+  enquiries {
+    string reference UK
+    text message
+    string category
+    string lane
+    jsonb fields
+    jsonb ai_eval
+    jsonb actual_eval
+    text draft_reply
+  }

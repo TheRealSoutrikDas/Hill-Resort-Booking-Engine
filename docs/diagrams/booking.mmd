@@ -1,0 +1,23 @@
+sequenceDiagram
+  autonumber
+  actor Guest
+  participant FE as Frontend
+  participant API as Backend
+  participant DB as PostgreSQL
+  Guest->>FE: Pick dates, rooms, plan
+  FE->>API: POST /api/quotes
+  API->>DB: Read rates, allotment, active holds
+  API-->>FE: Price per night with GST (paise)
+  Guest->>FE: Book (step 1 of 3)
+  FE->>API: POST /api/holds
+  API->>DB: SELECT allotments FOR UPDATE (every night, fixed order)
+  API->>DB: Check available = total_for_web - sold - held
+  API->>DB: Insert hold, prices per night, expires in 10 min
+  API-->>FE: Hold id and expiry
+  Guest->>FE: Guest details and consent (step 2)
+  FE->>API: PUT /api/holds/{id}/guest
+  Guest->>FE: Pay, test mode (step 3)
+  FE->>API: POST /api/holds/{id}/payment + Idempotency-Key
+  API->>API: Mock gateway captures (no transaction open)
+  API->>DB: Lock allotments again, sold += units, create booking
+  API-->>FE: Booking reference and receipt

@@ -1,0 +1,13 @@
+flowchart TD
+  IN["Enquiry arrives<br/>(web form, or seeded email, WhatsApp, phone)"] --> SAVE["1. Save as pending<br/>(never lost)"]
+  SAVE --> KW["2. Keyword classifier<br/>always runs, includes complaint check"]
+  KW --> M{"3. Gemini<br/>message text only"}
+  M -- "timeout or error" --> FB["Use keyword result<br/>marked fallback"]
+  M -- "invalid JSON twice" --> UNS1["Keyword result,<br/>Unsorted"]
+  M -- "valid, schema-checked" --> LANE
+  FB --> LANE
+  UNS1 --> LANE
+  LANE["4. Code decides the lane<br/>low confidence, disagreement, missing fields<br/>or category other: Unsorted"] --> ALERT["5. Complaint by model OR keywords:<br/>GM alert"]
+  ALERT --> DRAFT["6. Draft reply from a template<br/>prices filled from the rate table in code"]
+  DRAFT --> STORE["7. Store result, ai_eval snapshot"]
+  STORE --> STAFF["Staff: correct, re-route, reply (simulated)<br/>GM: approve, recorded as actual_eval"]
