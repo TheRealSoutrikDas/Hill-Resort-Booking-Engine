@@ -1,0 +1,53 @@
+.result {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 36rem;
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.result h2 {
+  margin: 0;
+  font-size: var(--step-2);
+  letter-spacing: 0.03em;
+}
+
+.result p {
+  margin: 0;
+}
+
+.dates {
+  font-weight: 600;
+}
+
+.lines {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.facts div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.facts dt {
+  font-weight: 600;
+}
+
+.facts dt::after {
+  content: ":";
+}
+
+.facts dd {
+  margin: 0;
+}

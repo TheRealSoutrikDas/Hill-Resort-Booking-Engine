@@ -50,3 +50,32 @@ export function thursdayStay(n: number): { checkIn: string; checkOut: string } {
   const checkIn = addDays(first, 7 * n);
   return { checkIn, checkOut: addDays(checkIn, 1) };
 }
+
+/** Book through the API as the signed-in page's account: hold, guest details, pay. */
+export async function bookViaApi(
+  page: Page,
+  stay: { checkIn: string; checkOut: string },
+  line = { room_type: "DLX", rate_plan: "RO", units: 1, guests: 2 },
+): Promise<string> {
+  const origin = new URL(page.url()).origin;
+  const me = await (await page.request.get("/api/auth/me")).json();
+  const headers = { "X-CSRF-Token": me.csrf_token, Origin: origin };
+  const hold = await (
+    await page.request.post("/api/holds", {
+      data: { check_in: stay.checkIn, check_out: stay.checkOut, lines: [line] },
+      headers,
+    })
+  ).json();
+  await page.request.put(`/api/holds/${hold.id}/guest`, {
+    data: { name: me.full_name, email: me.email, phone: "+91 98450 12345" },
+    headers,
+  });
+  const paid = await (
+    await page.request.post(`/api/holds/${hold.id}/payment`, {
+      data: { simulate: "success" },
+      headers: { ...headers, "Idempotency-Key": crypto.randomUUID() },
+    })
+  ).json();
+  if (paid.status !== "confirmed") throw new Error(`booking failed: ${JSON.stringify(paid)}`);
+  return paid.booking_reference as string;
+}

@@ -409,3 +409,21 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Promo (A-170 amended): the field is in the rooms summary, because the backend accepts a code only when the hold is created. A bad code shows the backend's reason and the price stays visible without it.
 - End-to-end tests cover the whole flow against the real backend: book and pay; signing in mid-way and returning to the same choice; a decline, then success; a timeout, then success; a double click sending one key; the same key sent twice returning the same booking; an expired and a valid promo code; cancelling and offering the rooms again; the countdown running out (with Playwright's clock, so the page's view is tested, not the server's); staff unable to book; a booking page needing sign-in. Each booking test books its own Thursday, which avoids every seeded special date, and the database is reseeded before a run.
 - No new dependency.
+
+## D-52 My bookings, lookup and cancellation on the frontend
+
+- `/my-bookings` (guests) shows the backend's sections as tabs (Upcoming, Current, Past, Cancelled) with counts; the frontend does no date logic, so the tabs agree with the server's idea of today in India (D-37). Each tab has its own empty state, and an account with no bookings gets "Find a room" instead of empty tabs. The tabs follow the ARIA tab pattern (`tablist`, `tab`, `tabpanel`).
+- Cancel (A-174) lives on `/bookings/[reference]`, asks for a second click in the page, and calls `POST /api/bookings/{reference}/cancel`; the page then shows the cancelled booking and that a full refund is in progress. When the backend says `can_cancel` is false, the page explains that online cancellation closes the day before check-in and to contact the resort.
+- `/find-booking` (A-48, now confirmed) is public and view only: the backend's summary with the email masked, one message for a wrong reference or a wrong email (the backend's), the wait from `Retry-After` when rate limited, and a "log in" link that returns to the booking's page for cancelling.
+- End-to-end tests make their bookings through the API (`bookViaApi`) on their own Thursdays, so they do not depend on the booking screens or on each other.
+- No new dependency.
+
+## D-53 The public enquiry form
+
+- `/enquire` posts to `POST /api/enquiries`, which saves first and classifies after (D-42). The form checks the basics (name, an email or a phone, a message within 2,000 characters, consent) and shows a live character count; the backend's codes (`invalid_name`, `invalid_email`, `invalid_phone`, `contact_required` on both contact fields, `empty_message`, `message_too_long`, `consent_required`) go under the matching field, and `rate_limited` shows the wait.
+- Success shows only the reference and the backend's thank-you message (A-122, A-178). "Send another enquiry" gives a fresh, empty form.
+- Prefill (A-176): the session loads after the page, so the form is keyed on the account and picks up the guest's details when they arrive; the message is held in state and is not lost.
+- Ways in: "Enquire" in the header, the home page's Visit section, and the sold-out message on the rooms page.
+- Found while testing: Next.js 16 keeps the page just left mounted but hidden (React `Activity`), so going back is instant. Tests that follow a navigation look at visible elements only.
+- End-to-end tests check that a sent enquiry reaches the staff inbox through the API with the message exactly as written.
+- No new dependency.

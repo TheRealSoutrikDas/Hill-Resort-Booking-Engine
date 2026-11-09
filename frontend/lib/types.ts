@@ -15,3 +15,5 @@ export type HoldOut = Schemas["HoldOut"];
 export type PaymentOut = Schemas["PaymentOut"];
 export type BookingOut = Schemas["BookingOut"];
 export type GuestDetails = Schemas["GuestDetails"];
+export type MyBooking = Schemas["MyBooking"];
+export type LookupOut = Schemas["LookupOut"];

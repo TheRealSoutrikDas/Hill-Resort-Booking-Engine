@@ -19,6 +19,7 @@ export function AccountMenu() {
     const firstName = me.full_name.split(" ")[0] || me.full_name;
     return (
       <div className={styles.menu}>
+        {me.role === "guest" && <Link href="/my-bookings">My bookings</Link>}
         <span className={styles.name} title={me.email}>
           {firstName}
         </span>

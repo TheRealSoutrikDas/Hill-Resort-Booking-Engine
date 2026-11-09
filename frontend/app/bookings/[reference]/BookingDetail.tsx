@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FormAlert } from "@/components/forms/Field";
 import { PriceBreakdown } from "@/components/PriceBreakdown";
 import { api } from "@/lib/api";
+import { paymentLabel } from "@/lib/booking-status";
 import { lineLabel, loadNames, type Names } from "@/lib/catalogue";
 import { ApiError } from "@/lib/errors";
 import { stayLabel } from "@/lib/stay";
@@ -53,6 +54,11 @@ export function BookingDetail() {
   return (
     <div className={`page ${styles.wrap}`}>
       <h1>{cancelled ? "Booking cancelled" : "Your booking is confirmed"}</h1>
+      {cancelled && (
+        <p className={styles.cancelNote} role="status">
+          Cancelled. A full refund is in progress.
+        </p>
+      )}
       <div className={styles.layout}>
         <div className={styles.steps}>
           <section className={styles.panel} aria-labelledby="reference-title">
@@ -80,8 +86,9 @@ export function BookingDetail() {
               {booking.payment_reference && <span className="muted"> (reference {booking.payment_reference})</span>}
             </p>
           </section>
+          {!cancelled && <CancelBooking booking={booking} onCancelled={setBooking} />}
           <p>
-            <Link href="/rooms">Book another stay</Link>
+            <Link href="/my-bookings">My bookings</Link> or <Link href="/rooms">book another stay</Link>
           </p>
         </div>
         <aside className={styles.panel} aria-labelledby="stay-title">
@@ -99,15 +106,64 @@ export function BookingDetail() {
   );
 }
 
-function paymentLabel(status: string): string {
-  switch (status) {
-    case "succeeded":
-      return "Paid in full";
-    case "refunded":
-      return "Refunded in full";
-    case "refund_pending":
-      return "Refund in progress";
-    default:
-      return status.replaceAll("_", " ");
+/**
+ * A-174: cancelling happens here, where the guest sees what is being cancelled, and
+ * needs a second click on the page (no browser pop-up). The backend decides whether it
+ * is still allowed (until the day before check-in, A-51).
+ */
+function CancelBooking({ booking, onCancelled }: { booking: BookingOut; onCancelled: (b: BookingOut) => void }) {
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  if (!booking.can_cancel) {
+    return (
+      <section className={styles.panel} aria-labelledby="change-title">
+        <h2 id="change-title">Changes</h2>
+        <p>Online cancellation closes the day before check-in. To change or cancel now, please contact the resort.</p>
+      </section>
+    );
   }
+
+  async function cancel() {
+    setBusy(true);
+    setProblem(null);
+    try {
+      onCancelled(await api<BookingOut>(`/api/bookings/${encodeURIComponent(booking.reference)}/cancel`, { method: "POST" }));
+    } catch (error) {
+      setBusy(false);
+      setProblem(error instanceof ApiError ? error.message : "The booking could not be cancelled. Please try again.");
+    }
+  }
+
+  return (
+    <section className={styles.panel} aria-labelledby="cancel-title">
+      <h2 id="cancel-title">Cancel</h2>
+      <p>You can cancel online until the day before check-in, with a full refund.</p>
+      {problem && (
+        <FormAlert>
+          <p>{problem}</p>
+        </FormAlert>
+      )}
+      {asking ? (
+        <div className={styles.confirm}>
+          <p>
+            <strong>Cancel booking {booking.reference}?</strong> The rooms go back on sale.
+          </p>
+          <div className={styles.confirmActions}>
+            <button type="button" className="button" disabled={busy} onClick={cancel}>
+              {busy ? "Cancelling" : "Yes, cancel it"}
+            </button>
+            <button type="button" className="button-quiet" disabled={busy} onClick={() => setAsking(false)}>
+              Keep my booking
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="button-quiet" onClick={() => setAsking(true)}>
+          Cancel this booking
+        </button>
+      )}
+    </section>
+  );
 }

@@ -6,7 +6,8 @@ export function SiteFooter() {
     <footer className={styles.footer}>
       <div className="page">
         <p>CompanyA, a coffee-estate resort in Chikkamagaluru, Karnataka.</p>
-        <p>
+        <p className={styles.links}>
+          <Link href="/find-booking">Find a booking</Link>
           <Link href="/privacy">How we use your details</Link>
         </p>
         <p className={styles.demo}>
