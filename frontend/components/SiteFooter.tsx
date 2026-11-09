@@ -14,6 +14,9 @@ export function SiteFooter() {
           This is a demonstration site. Payments, emails and messages are simulated; no money is
           taken and nothing is sent.
         </p>
+        <p className={styles.demo}>
+          Photos are illustrative samples from Unsplash, not of CompanyA.
+        </p>
       </div>
     </footer>
   );

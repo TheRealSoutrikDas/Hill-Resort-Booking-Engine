@@ -1,0 +1,16 @@
+.wrap {
+  padding-block: var(--space-5) var(--space-6);
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 21 / 8;
+  margin-bottom: var(--space-5);
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--line);
+}
+
+.photo img {
+  object-fit: cover;
+}

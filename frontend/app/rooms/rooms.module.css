@@ -20,8 +20,90 @@
 }
 
 .room {
+  display: grid;
+  gap: var(--space-3);
   padding-block: var(--space-4);
   border-bottom: 1px solid var(--line);
+}
+
+/* min-width: 0 keeps long content inside the grid column on a phone. */
+.roomBody {
+  min-width: 0;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 5 / 2;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--line);
+}
+
+.thumb img {
+  object-fit: cover;
+}
+
+@media (min-width: 48rem) {
+  .room {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  .thumb {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--arch);
+  }
+}
+
+/* A room's own page: one large photo and two smaller ones. */
+.gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+}
+
+.galleryPhoto {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--line);
+}
+
+.galleryPhoto img {
+  object-fit: cover;
+}
+
+.galleryPhoto:first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--arch);
+}
+
+.galleryNote {
+  margin-bottom: var(--space-4);
+  color: var(--leaf);
+  font-size: var(--step--1);
+}
+
+@media (min-width: 48rem) {
+  .gallery {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .galleryPhoto {
+    aspect-ratio: auto;
+  }
+
+  .galleryPhoto:first-child {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    aspect-ratio: 4 / 3;
+  }
 }
 
 .roomHead {
@@ -279,4 +361,8 @@
 .book .button {
   width: 100%;
   min-height: 2.8rem;
+}
+
+.plans + p {
+  margin-top: var(--space-3);
 }

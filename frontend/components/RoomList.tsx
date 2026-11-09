@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ApiError } from "@/lib/errors";
 import { guestsLabel } from "@/lib/format";
+import { roomPhotos } from "@/lib/photos";
 import { serverGet } from "@/lib/server-api";
 import type { RoomSearch } from "@/lib/types";
 import styles from "./RoomList.module.css";
@@ -28,19 +30,33 @@ export async function RoomList() {
   }
   return (
     <ul className={styles.list}>
-      {data.rooms.map((room) => (
-        <li key={room.code} className={styles.item}>
-          <div className={styles.heading}>
-            <h3>
-              <Link href={`/rooms/${room.code}`}>{room.name}</Link>
-            </h3>
-            <span className={styles.meta}>
-              {KIND_LABEL[room.kind] ?? room.kind}, for up to {guestsLabel(room.max_guests)}
-            </span>
-          </div>
-          <p className={styles.description}>{room.description}</p>
-        </li>
-      ))}
+      {data.rooms.map((room) => {
+        const photo = roomPhotos(room.code)[0];
+        return (
+          <li key={room.code} className={styles.item}>
+            {photo && (
+              <div className={styles.photo}>
+                <Image
+                  src={photo.src}
+                  alt={photo.alt}
+                  fill
+                  placeholder="blur"
+                  sizes="(min-width: 48rem) 40vw, 100vw"
+                />
+              </div>
+            )}
+            <div className={styles.text}>
+              <h3>
+                <Link href={`/rooms/${room.code}`}>{room.name}</Link>
+              </h3>
+              <p className={styles.meta}>
+                {KIND_LABEL[room.kind] ?? room.kind}, for up to {guestsLabel(room.max_guests)}
+              </p>
+              <p className={styles.description}>{room.description}</p>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

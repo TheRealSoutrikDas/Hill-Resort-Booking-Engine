@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { SessionProvider } from "@/components/SessionProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import "@fontsource/tiro-kannada/latin-400.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

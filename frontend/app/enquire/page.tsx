@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import styles from "../auth.module.css";
+import { PhotoPanel } from "@/components/PhotoPanel";
+import { PANEL_ENQUIRE } from "@/lib/photos";
 import { EnquiryForm } from "./EnquiryForm";
 
 export const metadata: Metadata = { title: "Send an enquiry" };
 
 export default function EnquirePage() {
   return (
-    <div className={`page ${styles.wrap}`}>
+    <PhotoPanel photo={PANEL_ENQUIRE}>
       <h1>Send an enquiry</h1>
       <p className="muted">
         Weddings, company offsites, group stays, or anything else you would like to ask. Our team
@@ -16,6 +17,6 @@ export default function EnquirePage() {
       <Suspense fallback={null}>
         <EnquiryForm />
       </Suspense>
-    </div>
+    </PhotoPanel>
   );
 }

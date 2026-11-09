@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { ApiError } from "@/lib/errors";
 import { formatInr, guestsLabel } from "@/lib/format";
+import { roomPhotos } from "@/lib/photos";
 import { serverGet } from "@/lib/server-api";
 import { parseSearch, searchQuery, stayLabel } from "@/lib/stay";
 import type { RoomDetail } from "@/lib/types";
@@ -57,12 +59,32 @@ async function Room({ params, searchParams }: Props) {
   const room = detail.room;
   const dated = search.checkIn && search.checkOut;
   const left = room.available_units ?? 0;
+  const photos = roomPhotos(room.code);
   return (
     <>
       <p>
         <Link href={`/rooms?${searchQuery(search)}`}>All rooms and villas</Link>
       </p>
       <h1>{room.name}</h1>
+      {photos.length > 0 && (
+        <>
+          <div className={styles.gallery}>
+            {photos.map((photo, i) => (
+              <div key={i} className={styles.galleryPhoto}>
+                <Image
+                  src={photo.src}
+                  alt={photo.alt}
+                  fill
+                  priority={i === 0}
+                  placeholder="blur"
+                  sizes={i === 0 ? "(min-width: 48rem) 44rem, 100vw" : "(min-width: 48rem) 22rem, 50vw"}
+                />
+              </div>
+            ))}
+          </div>
+          <p className={styles.galleryNote}>Sample photos, not of CompanyA.</p>
+        </>
+      )}
       <p>
         {room.description} For up to {guestsLabel(room.max_guests)}.
       </p>

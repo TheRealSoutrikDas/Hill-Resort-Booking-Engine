@@ -1,5 +1,6 @@
-/* Design tokens (A-154). Colours from the estate itself: monsoon mist, shade-tree
-   green, leaf, and coffee-cherry red kept for the one main action on a screen. */
+/* Design tokens (A-154, D-57). Colours from the estate itself: monsoon mist, shade-tree
+   green, leaf, roasted bark, and coffee-cherry red kept for the one main action on a
+   screen. The photos carry the luxury; everything around them stays quiet. */
 :root {
   --mist: #eef1ec;
   --paper: #ffffff;
@@ -9,8 +10,12 @@
   --cherry-dark: #8f1d24;
   --line: #cfd8cd;
   --danger-bg: #fbeaea;
+  --bark: #2b231d;
+  --bark-soft: #d9cfc4;
 
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  /* Tiro Kannada: drawn for Kannada, the language of Karnataka, with a matching
+     Latin. Self-hosted from @fontsource, one weight only. */
+  --font-display: "Tiro Kannada", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
 
   /* Type scale (1.25) */
@@ -20,6 +25,7 @@
   --step-2: 1.563rem;
   --step-3: 1.953rem;
   --step-4: clamp(2.2rem, 5vw + 1rem, 3.6rem);
+  --step-5: clamp(2.6rem, 6vw + 1rem, 5rem);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -30,7 +36,9 @@
 
   --measure: 68ch;
   --page: 72rem;
-  --radius: 6px;
+  --radius: 4px;
+  /* A low arch, like an estate-house window, for room photos only. */
+  --arch: 50% 50% var(--radius) var(--radius) / 2.75rem 2.75rem var(--radius) var(--radius);
   color-scheme: light;
 }
 
@@ -57,15 +65,15 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.15;
+  font-weight: 400;
+  line-height: 1.12;
   margin: 0 0 var(--space-3);
   text-wrap: balance;
 }
 
 h1 {
   font-size: var(--step-4);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 h2 {
@@ -172,4 +180,8 @@ a {
   color: var(--canopy);
   font: inherit;
   cursor: pointer;
+}
+
+.button-quiet:hover {
+  background: var(--paper);
 }
