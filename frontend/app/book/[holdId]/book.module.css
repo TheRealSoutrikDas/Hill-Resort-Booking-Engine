@@ -1,0 +1,113 @@
+.wrap {
+  padding-block: var(--space-5) var(--space-6);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.steps {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  padding: var(--space-4);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: var(--step-2);
+}
+
+.panel p {
+  margin: 0;
+}
+
+.timer {
+  padding: var(--space-3) var(--space-4);
+  background: var(--canopy);
+  color: var(--paper);
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stay {
+  font-weight: 600;
+}
+
+.lines {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.guest {
+  line-height: 1.7;
+}
+
+.demo {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px dashed var(--leaf);
+  border-radius: var(--radius);
+}
+
+.demo legend {
+  padding-inline: var(--space-1);
+  font-weight: 700;
+}
+
+.pay {
+  width: 100%;
+  min-height: 2.8rem;
+}
+
+.cancel {
+  margin: 0;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cherry-dark);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+
+  .layout > aside {
+    position: sticky;
+    top: var(--space-4);
+    align-self: start;
+  }
+}
+
+.reference {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.panel > :global(.button-quiet) {
+  justify-self: start;
+}
