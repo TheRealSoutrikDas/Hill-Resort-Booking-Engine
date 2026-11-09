@@ -437,3 +437,12 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Daily export: a date (today in IST by default) and a plain download link to `/api/exports/bookings.csv`, so the browser saves the file the backend names (A-185).
 - End-to-end tests prove the screens reach the system, not only the API: a price set in the admin grid is the price the guest is quoted; a blackout makes the guest's rooms page sold out and reopening restores it; a new promo code discounts a quote and stops working when switched off. They use far-off Tuesday and Wednesday nights, a different week for desktop and phone, so they never meet another test's bookings.
 - No new dependency.
+
+## D-55 The staff inbox
+
+- `/staff` (all staff) has three sections: Inbox, GM alerts and Metrics, with a "Staff" link in the header. The inbox tabs are the five lanes plus Pending, Failed and Replied, with the backend's counts; the open tab lives in the address (`?tab=`), and each team starts on its own lane (A-186).
+- The enquiry page puts the message, as written, beside what was understood (category, lane and team, confidence, backend and any fallback, the extracted fields), says why an enquiry is in Unsorted, and can show what the keyword check and the AI each said. GM alerts and failed classifications are flagged at the top.
+- Actions appear only when the backend allows them (`can_act`, `can_reclassify`, `can_verify`): reply with the code-built draft (placeholders block sending, A-188), correct the category or fields (only changed values are sent, A-189), move to another lane, run the classification again, and, for the GM, approve (A-190). Each action returns the updated enquiry, so the page shows the result, including the history line, without another request.
+- GM alerts list open alerts first with a link to each enquiry; only the GM can acknowledge. Metrics show counts and rates for a date range (last 30 days by default) and AI accuracy against the GM's approvals, with how many enquiries are still awaiting approval (A-192).
+- End-to-end tests send their own enquiries through the public API, so they never depend on each other or on the seeded ones. The backend for these tests runs with `CLASSIFIER_BACKEND=keyword`, so routing is deterministic and a `.env` that chooses Gemini cannot make the tests call it; the README command sets it, and reseeds with `--classify` so the demo inbox is classified.
+- No new dependency.

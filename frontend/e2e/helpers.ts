@@ -92,3 +92,14 @@ export function adminTuesday(project: string): string {
   const first = firstWeekdayOnOrAfter(addDays(todayInIndia(), 3), 1);
   return addDays(first, 7 * (project === "phone" ? 18 : 17));
 }
+
+/** Send an enquiry through the public API, as the form does; returns its reference. */
+export async function sendEnquiry(page: Page, message: string, name = "Test Guest"): Promise<string> {
+  const origin = new URL(page.url() === "about:blank" ? "http://localhost:3000" : page.url()).origin;
+  const response = await page.request.post("/api/enquiries", {
+    data: { name, email: "test.guest@example.com", phone: null, message, consent: true },
+    headers: { Origin: origin },
+  });
+  if (response.status() !== 201) throw new Error(`enquiry not accepted: ${response.status()}`);
+  return (await response.json()).reference as string;
+}
