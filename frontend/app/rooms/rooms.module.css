@@ -231,6 +231,8 @@
 .summary {
   align-self: start;
   display: grid;
+  /* One column that never grows past the panel, so the promo row and totals stay inside it. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-4);
   background: var(--paper);
@@ -324,6 +326,7 @@
 
 .promo {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1);
   font-size: var(--step--1);
 }

@@ -27,7 +27,6 @@ rooms/EVR-3.jpg     2000 photo-1672219386269-486cbbe9a50f
 rooms/FST-1.jpg     2000 photo-1657554378558-efc5479a9dcb
 rooms/FST-2.jpg     2000 photo-1779364867798-386fb7213a2c
 rooms/FST-3.jpg     2000 photo-1617325247661-675ab4b64ae2
-rooms/PLV-1.jpg     2000 photo-1768011850213-0eade0808bc5
 rooms/PLV-2.jpg     2000 photo-1604882234072-d5741489e0c0
 rooms/PLV-3.jpg     2000 photo-1679163818124-b43cecd1c6a2
 rooms/PPV-1.jpg     2000 photo-1669279261386-6be88fb8fc65
