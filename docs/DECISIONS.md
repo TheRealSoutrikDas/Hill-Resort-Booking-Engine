@@ -376,3 +376,36 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Look (A-154, A-157): tokens from the estate (mist, shade-tree green, leaf, coffee-cherry red reserved for the main action), a Palatino-style serif for headings and the system sans for text, both system fonts (nothing downloaded). The one bold element is an SVG of terraced coffee rows under a band of mist; the rest is quiet. Rooms are a ruled list, not a card grid.
 - Quality floor: skip link, visible focus, `lang="en-IN"`, reduced motion respected, no horizontal scroll at phone width, loading, empty, error and not-found states.
 - To note for deployment (step 32): through the proxy the backend sees the frontend server's address, so per-IP rate limits need uvicorn's `--forwarded-allow-ips` set to the frontend, as `deployment.md` already describes.
+
+## D-49 Sign-in on the frontend
+
+- One `SessionProvider` in the layout asks `GET /api/auth/me` once per page load. It holds the account and restores the CSRF token, which lives in memory only. The header's account area and the `RequireSignIn` guard read from it. Nothing about the session is kept in browser storage; the session cookie is HttpOnly and set by the backend.
+- `/login` and `/signup` are client forms. The backend signs a new account in straight away, so sign-up lands signed in. Errors from the backend's one error format are placed where they belong: field codes next to the field, `email_taken` with a link to log in that keeps `next`, `rate_limited` with the wait from `Retry-After`, and an unreachable backend with its own message.
+- Return after login (D-24, A-158): `lib/next-path.ts` accepts only same-site paths. Tested with `https://evil.example/`, `//evil.example/` and `/\evil.example`.
+- `RequireSignIn` sends a signed-out visitor to `/login?next=<here>` and can require a role (guest for booking, staff for the inbox). It only spares a page that would fail; the API checks every request itself.
+- `/privacy` is a short notice for the DPDP Act (A-161), linked from the consent checkbox and the footer.
+- End-to-end tests run against the real backend started with relaxed rate limits, because every test request reaches the backend from the same address. The 429 and backend-down messages are tested by intercepting the request in the browser.
+- No new dependency.
+
+## D-50 Rooms, availability and prices on the frontend
+
+- The search lives in the address: `/rooms?check_in=&check_out=&guests=&sel=PLV.BB.1.4,DLX.RO.1.1` (room type, plan, rooms, guests per line). Reloads, sharing, the back button and the return after sign-in (A-171) all keep it. Choosing rooms updates the address with `history.replaceState`, which Next.js supports without asking the server again; `router.replace` would have re-rendered the page on the server, about six API calls, on every click.
+- `/rooms` is a server component inside `<Suspense>`: `GET /api/rooms` for the dates, then every room type's `GET /api/rooms/{code}` in parallel for its plans and prices. "Rooms left" comes from availability; the per-plan price is for one room and is shown even on sold-out dates, so the page marks a type sold out from availability and caps the rooms you can choose at what is left. The backend checks again when the hold is made.
+- The choice is priced by `POST /api/quotes`, debounced by 250 ms and cancelled when superseded (A-166). Each answer is tied to the exact choice it priced, so a stale total is never shown or booked while a new one is on its way.
+- "Today" for the date picker comes from the visitor's clock when the page runs (`useSyncExternalStore`), in India's time zone. The home page is pre-rendered, so reading the clock at render time would have frozen "today" at the build date; Next.js refused that at build, which is how it was found.
+- Under Next.js's `cacheComponents`, components that read the address (the header's account link, `RequireSignIn`) sit inside `<Suspense>` boundaries.
+- On a phone the summary is far down the page, so a bar fixed to the bottom shows the rooms chosen and the total, with a link to the summary.
+- Known limitation: the room page streams, so for an unknown room code the status is already 200 when the API says 404. Next.js still shows the not-found page and marks it `noindex`; a real 404 status would need the page to wait for the API before sending anything.
+- Tests: end-to-end tests derive the seeded sold-out weekend from the same rule as the seed (first Friday 14 or more days ahead) instead of fixed dates, so they keep passing on later days. Streamed content can exist twice for a moment (a hidden copy before it is swapped in), so tests look at visible elements.
+- No new dependency.
+
+## D-51 The booking flow on the frontend
+
+- "Book these rooms" sends a signed-out visitor to log in with the `/rooms` address as `next` (D-24, A-171). Signed in, it calls `POST /api/holds` with the lines and any promo code and opens `/book/[holdId]`. Staff accounts see the button disabled and why. A `not_available` answer (someone booked the last room a moment ago) asks the guest to refresh and see what is left.
+- `/book/[holdId]` runs in the browser behind `RequireSignIn role="guest"`. It shows a countdown from `expires_at` (A-167); the guest step is prefilled from the account (`guest_suggestion`) and saved with `PUT /api/holds/{id}/guest`, with the backend's field codes shown under the right field; the pay step appears only once the guest's details are saved. A hold already paid for opens its booking instead.
+- Payment (A-168): one key per attempt from `lib/payment-key.ts`, sent as `Idempotency-Key`, and forgotten only on a final answer. Confirmed opens the booking; declined and timed out (in this mock, "not charged") allow a new attempt with a new key; processing keeps the key and offers "Check payment status"; refunded or refund pending (paid after the rooms were released) shows the backend's explanation. `hold_not_active` turns the page into the expired view.
+- Expired or released holds show what happened and "Check these rooms again", which rebuilds the `/rooms` address from the hold's own lines, so the guest's choice is not lost.
+- `/bookings/[reference]` is the confirmation: reference, guest, payment status and reference, the stay and the price breakdown, all from `GET /api/bookings/{reference}`. The hold and booking APIs return codes, so room and plan names are looked up from the public catalogue (`lib/catalogue.ts`); if that fails the codes are shown.
+- Promo (A-170 amended): the field is in the rooms summary, because the backend accepts a code only when the hold is created. A bad code shows the backend's reason and the price stays visible without it.
+- End-to-end tests cover the whole flow against the real backend: book and pay; signing in mid-way and returning to the same choice; a decline, then success; a timeout, then success; a double click sending one key; the same key sent twice returning the same booking; an expired and a valid promo code; cancelling and offering the rooms again; the countdown running out (with Playwright's clock, so the page's view is tested, not the server's); staff unable to book; a booking page needing sign-in. Each booking test books its own Thursday, which avoids every seeded special date, and the database is reseeded before a run.
+- No new dependency.

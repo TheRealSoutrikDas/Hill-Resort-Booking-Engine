@@ -1,0 +1,87 @@
+.form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 28rem;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.label {
+  font-weight: 600;
+}
+
+.hint {
+  color: var(--leaf);
+  font-size: var(--step--1);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid #9fb09c;
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--canopy);
+  font: inherit;
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--cherry);
+}
+
+.error {
+  color: var(--cherry-dark);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.withToggle {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.toggle {
+  flex: none;
+  padding: 0 var(--space-3);
+  border: 1px solid #9fb09c;
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--canopy);
+  font: inherit;
+  cursor: pointer;
+}
+
+.check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.2rem;
+  accent-color: var(--canopy);
+}
+
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--cherry);
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+}
+
+.alert p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}

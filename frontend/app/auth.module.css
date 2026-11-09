@@ -1,0 +1,11 @@
+.wrap {
+  padding-block: var(--space-5) var(--space-6);
+}
+
+.wrap h1 {
+  font-size: var(--step-3);
+}
+
+.aside {
+  margin-top: var(--space-4);
+}

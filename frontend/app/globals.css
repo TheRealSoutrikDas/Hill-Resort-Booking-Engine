@@ -153,3 +153,23 @@ a {
 .button:hover {
   background: var(--cherry-dark);
 }
+
+.notice {
+  padding-block: var(--space-5);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button-quiet {
+  display: inline-block;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--canopy);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--canopy);
+  font: inherit;
+  cursor: pointer;
+}
