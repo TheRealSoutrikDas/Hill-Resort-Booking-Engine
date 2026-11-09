@@ -427,3 +427,13 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - Found while testing: Next.js 16 keeps the page just left mounted but hidden (React `Activity`), so going back is instant. Tests that follow a navigation look at visible elements only.
 - End-to-end tests check that a sent enquiry reaches the staff inbox through the API with the message exactly as written.
 - No new dependency.
+
+## D-54 Admin screens
+
+- `/admin` (inventory, promo codes, daily export) sits behind `RequireSignIn role="staff"` and an `AdminGate` that lets in the reservations team and the GM (A-180), matching the backend's `require_user(role="staff", team="reservations")`, which also admits the GM. `/admin` redirects to the inventory.
+- Inventory: a table with room types as rows and nights as columns. Each cell shows rooms left out of the web allotment, sold and held, and the price for the chosen plan; blackouts are marked "Closed"; Friday and Saturday nights are shaded. The table scrolls sideways inside its own box with the room names fixed on the left, so the page never scrolls sideways on a phone. Plan names come from the public catalogue, with codes as the fallback.
+- Three change forms (price with optional weekdays, web allotment, blackout or reopen) call the existing endpoints and reload the grid. Refusals show the backend's message and, for allotment and blackout, each blocking night (for example "8 sold and 0 held, so at least 8"). Blackouts ask for a second click (A-183).
+- Promo codes: a table with uses, reserved uses, limit and whether the code works today, with the reason when it does not (switched off, not started, ended, limit reached). Each row can be switched on or off and have its end date or limit changed; a limit below uses plus reserved shows the backend's minimum. New codes are created below the table.
+- Daily export: a date (today in IST by default) and a plain download link to `/api/exports/bookings.csv`, so the browser saves the file the backend names (A-185).
+- End-to-end tests prove the screens reach the system, not only the API: a price set in the admin grid is the price the guest is quoted; a blackout makes the guest's rooms page sold out and reopening restores it; a new promo code discounts a quote and stops working when switched off. They use far-off Tuesday and Wednesday nights, a different week for desktop and phone, so they never meet another test's bookings.
+- No new dependency.

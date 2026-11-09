@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { loginHref } from "@/lib/next-path";
-import { useSession } from "./SessionProvider";
+import { canAdmin, useSession } from "./SessionProvider";
 import styles from "./AccountMenu.module.css";
 
 export function AccountMenu() {
@@ -20,6 +20,7 @@ export function AccountMenu() {
     return (
       <div className={styles.menu}>
         {me.role === "guest" && <Link href="/my-bookings">My bookings</Link>}
+        {canAdmin(me) && <Link href="/admin/inventory">Admin</Link>}
         <span className={styles.name} title={me.email}>
           {firstName}
         </span>
