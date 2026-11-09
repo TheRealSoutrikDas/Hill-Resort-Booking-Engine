@@ -17,10 +17,10 @@ type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 export async function api<T>(
   path: string,
-  options: { method?: Method; body?: unknown; signal?: AbortSignal } = {},
+  options: { method?: Method; body?: unknown; signal?: AbortSignal; headers?: Record<string, string> } = {},
 ): Promise<T> {
   const method = options.method ?? "GET";
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = { Accept: "application/json", ...options.headers };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (method !== "GET" && csrfToken) headers["X-CSRF-Token"] = csrfToken;
 
