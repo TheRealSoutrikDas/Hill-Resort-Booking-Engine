@@ -111,3 +111,26 @@
 .panel > :global(.button-quiet) {
   justify-self: start;
 }
+
+.cancelNote {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--cherry);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-weight: 600;
+}
+
+.confirm {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--cherry);
+  border-radius: var(--radius);
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
