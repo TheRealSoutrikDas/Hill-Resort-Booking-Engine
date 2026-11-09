@@ -28,10 +28,10 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-18 | Database | PostgreSQL 16 locally, in CI and in production. The `postgres:16` image tag follows minor releases. | Confirmed |
 | A-19 | Auth | The GM account may have no team. | Confirmed |
 | A-20 | Promo | `used_count` goes up only on a confirmed booking; a cancellation does not give the use back. | Confirmed |
-| A-21 | Local dev | Local Postgres listens on 127.0.0.1:5432 only. | Proposed |
-| A-22 | Tests | Tests use a separate database named `<POSTGRES_DB>_test`, and refuse any name without the `_test` suffix. | Proposed |
-| A-23 | Tooling | Direct dependencies are pinned exactly; transitive ones are not locked. A lock file is a possible later step. | Proposed |
-| A-24 | Tooling | New dependency versions must be at least two weeks old when added. | Proposed |
+| A-21 | Local dev | Local Postgres listens on 127.0.0.1:5432 only. | Confirmed |
+| A-22 | Tests | Tests use a separate database named `<POSTGRES_DB>_test`, and refuse any name without the `_test` suffix. | Confirmed |
+| A-23 | Tooling | Direct dependencies are pinned exactly; transitive ones are not locked. A lock file is a possible later step. | Confirmed |
+| A-24 | Tooling | New dependency versions must be at least two weeks old when added. | Confirmed |
 | A-25 | Booking | At most 4 units per booking (`MAX_UNITS_PER_BOOKING`, enforced in the service). Larger groups use the enquiry form. | Confirmed |
 | A-26 | Auth | Exactly one account carries the GM flag, enforced by a partial unique index. | Confirmed |
 | A-27 | Enquiries | Channels are web, email, whatsapp and phone. Only the web form exists; the others mark seeded or manually logged enquiries. | Confirmed |
@@ -42,8 +42,8 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-32 | Enquiries | In `sample_enquiries.json`, ENQ-4410 to ENQ-4412 are the client's samples; all others are invented for the demo. ENQ-4422 gained `event_month` 2027-01 (client approved). | Confirmed |
 | A-33 | Payments | A cancelled booking is fully refunded; no cancellation fee. | Confirmed |
 | A-34 | Seed | Superseded by A-78: demo accounts get documented passwords; booking-guest accounts keep an unusable marker. | Changed |
-| A-35 | Seed | Seeded enquiries get a channel by position (web, email, whatsapp, web, phone, repeating), invented contact details, and are received over the last 72 hours. | Proposed |
-| A-36 | Seed | `--today` lets the seed run as if on a given date, for repeatable demos and tests. | Proposed |
+| A-35 | Seed | Seeded enquiries get a channel by position (web, email, whatsapp, web, phone, repeating), invented contact details, and are received over the last 72 hours. | Confirmed |
+| A-36 | Seed | `--today` lets the seed run as if on a given date, for repeatable demos and tests. | Confirmed |
 | A-37 | Availability | A night with no allotment row is not sellable online (0 available). | Confirmed |
 | A-38 | Booking | Check-in can be any day from today (IST) to 179 days ahead: a 180-day window including today (`BOOKING_HORIZON_DAYS`). | Confirmed |
 | A-39 | Booking | Maximum stay is 14 nights (`MAX_STAY_NIGHTS`); longer stays use the enquiry form. | Confirmed |
@@ -56,7 +56,7 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-46 | Booking | An inactive rate plan cannot be booked, even if rates exist for it. | Confirmed |
 | A-47 | Promo | Promo codes are added to hold creation in step 9; step 5 holds carry no discount. | Confirmed |
 | A-48 | Booking | Lookup by reference plus email stays (brief screen 4) but is view only; cancelling requires signing in as the account that booked. | Confirmed (step 28) |
-| A-49 | Booking | Guest details are checked for shape only: a name, an email in the form name@domain.tld (stored lowercase, not verified), and a phone of 8 to 20 digits and spaces with an optional leading +. | Proposed |
+| A-49 | Booking | Guest details are checked for shape only: a name, an email in the form name@domain.tld (stored lowercase, not verified), and a phone of 8 to 20 digits and spaces with an optional leading +. | Confirmed |
 | A-50 | Payments | When payment was taken but the booking fails (expired hold with stock gone, released hold, missing guest details, or a second payment for an already-paid hold), the payment is marked `refund_pending` and the hold is released so it cannot be retried. | Confirmed |
 | A-51 | Booking | A guest can cancel online until the day before check-in (IST); from check-in day they contact the resort. | Confirmed |
 | A-52 | Payments | Cancelling marks the payment `refund_pending`; the mock provider completes the refund in step 10. | Confirmed |
@@ -206,3 +206,6 @@ Every choice the brief does not state. Status is one of: Proposed, Confirmed, Ch
 | A-196 | Frontend | Photos that carry content have alt text saying what the photo shows, never that it is CompanyA. Purely decorative photos (beside the forms, on the not-found page) have empty alt text. No photo is a link or a button. | Confirmed |
 | A-197 | Frontend | Photos are downloaded at most 2400 px wide (the hero), 2000 px for most, 1600 px for the form panels, as JPEG quality 80. `next/image` serves smaller, modern-format copies sized to each screen. | Confirmed |
 | A-198 | Frontend | Room photos are matched to room types by the room code in the file name (`rooms/PLV-1.jpg`, A-88). A room type with no photos shows none; the API is unchanged. | Confirmed |
+| A-199 | Deployment | When deployed, the backend has no public domain, so only the frontend can reach it, and it sets `FORWARDED_ALLOW_IPS=*`. The client IP is the first `X-Forwarded-For` entry, written by Railway's edge, which replaces any value a client sends (stated by Railway staff, not in its documentation). | Confirmed |
+| A-200 | Deployment | The app is not deployed for this submission; it runs locally, and the Railway setup is prepared but not run. A deployed demo would be seeded by hand with `python -m app.seed --reset --classify`, never on deploy. | Confirmed |
+| A-201 | Deployment | A deployed demo would classify enquiries with Gemini, with the keyword classifier as fallback; on Google's free tier only invented or reviewer-typed message text would be sent. | Confirmed |
