@@ -1,0 +1,29 @@
+.menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.login {
+  font-weight: 600;
+}
+
+.placeholder {
+  display: inline-block;
+  width: 4.5rem;
+}

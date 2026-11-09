@@ -6,14 +6,23 @@ export class ApiError extends Error {
   readonly code: string;
   readonly details: unknown;
   readonly requestId: string | null;
+  readonly retryAfterSeconds: number | null; // from Retry-After, on 429 and 503
 
-  constructor(status: number, code: string, message: string, details?: unknown, requestId?: string | null) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: unknown,
+    requestId?: string | null,
+    retryAfterSeconds?: number | null,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.details = details ?? null;
     this.requestId = requestId ?? null;
+    this.retryAfterSeconds = retryAfterSeconds ?? null;
   }
 }
 
@@ -28,15 +37,25 @@ export async function toApiError(response: Response): Promise<ApiError> {
     body = null;
   }
   const error = body?.error;
+  const retryAfter = Number.parseInt(response.headers.get("retry-after") ?? "", 10);
   return new ApiError(
     response.status,
     error?.code ?? "unexpected_response",
     error?.message ?? "Something went wrong. Please try again.",
     error?.details,
     body?.request_id ?? response.headers.get("x-request-id"),
+    Number.isFinite(retryAfter) ? retryAfter : null,
   );
 }
 
 export function unreachable(): ApiError {
   return new ApiError(0, UNREACHABLE, "We could not reach our booking system. Please try again shortly.");
+}
+
+/** "Try again in 12 minutes" for a rate-limited request, from Retry-After. */
+export function waitMessage(error: ApiError): string {
+  const seconds = error.retryAfterSeconds;
+  if (!seconds || seconds <= 0) return "Too many attempts. Please wait a little and try again.";
+  if (seconds < 90) return `Too many attempts. Try again in ${seconds} seconds.`;
+  return `Too many attempts. Try again in ${Math.ceil(seconds / 60)} minutes.`;
 }

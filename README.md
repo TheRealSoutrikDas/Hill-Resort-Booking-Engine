@@ -110,6 +110,18 @@ npx playwright install chromium   # once
 npm run test:e2e                  # needs the seeded backend running and a build
 ```
 
+For the end-to-end tests, reseed (the booking tests take rooms) and start the backend with
+relaxed rate limits, because every test request reaches it from the same address (the
+frontend server):
+
+```bash
+cd backend
+python -m app.seed --reset
+RATE_LOGIN_PER_IP=10000 RATE_LOGIN_FAILURES_PER_EMAIL=10000 RATE_SIGNUP_PER_IP=10000 \
+RATE_LOOKUP_PER_IP=10000 RATE_ENQUIRY_PER_IP=10000 \
+SESSION_COOKIE_SECURE=false uvicorn app.main:create_app --factory
+```
+
 The TypeScript types for the API come from the backend's OpenAPI schema. After an API
 change (a backend test fails until you do this):
 

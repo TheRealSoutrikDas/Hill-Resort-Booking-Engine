@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SessionProvider } from "@/components/SessionProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
@@ -17,9 +18,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-        <SiteHeader />
-        <main id="main">{children}</main>
-        <SiteFooter />
+        <SessionProvider>
+          <SiteHeader />
+          <main id="main">{children}</main>
+          <SiteFooter />
+        </SessionProvider>
       </body>
     </html>
   );
