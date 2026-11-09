@@ -79,3 +79,16 @@ export async function bookViaApi(
   if (paid.status !== "confirmed") throw new Error(`booking failed: ${JSON.stringify(paid)}`);
   return paid.booking_reference as string;
 }
+
+export const EVENTS = { email: "events@example.com", password: "Events-Demo-2026" };
+export const GM = { email: "gm@example.com", password: "GM-Demo-2026" };
+
+/**
+ * A Tuesday about four months ahead for admin tests (week 17 or 18 from now), clear of
+ * the Thursdays the booking tests use and the near dates the rooms tests use. Desktop
+ * and phone run in parallel, so each gets its own week.
+ */
+export function adminTuesday(project: string): string {
+  const first = firstWeekdayOnOrAfter(addDays(todayInIndia(), 3), 1);
+  return addDays(first, 7 * (project === "phone" ? 18 : 17));
+}

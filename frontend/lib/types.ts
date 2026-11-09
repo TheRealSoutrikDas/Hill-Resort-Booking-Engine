@@ -17,3 +17,6 @@ export type BookingOut = Schemas["BookingOut"];
 export type GuestDetails = Schemas["GuestDetails"];
 export type MyBooking = Schemas["MyBooking"];
 export type LookupOut = Schemas["LookupOut"];
+export type Inventory = Schemas["Inventory"];
+export type RoomTypeInventory = Schemas["RoomTypeInventory"];
+export type AdminPromo = Schemas["app__api__admin_promos__PromoOut"];

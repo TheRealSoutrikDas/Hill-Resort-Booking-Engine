@@ -78,3 +78,8 @@ export function useSession(): SessionValue {
 export function isStaff(me: Me | null): boolean {
   return me?.role === "staff";
 }
+
+/** Admin screens are for the reservations team and the GM (A-100, A-180). */
+export function canAdmin(me: Me | null): boolean {
+  return me?.role === "staff" && (me.team === "reservations" || me.is_gm);
+}
