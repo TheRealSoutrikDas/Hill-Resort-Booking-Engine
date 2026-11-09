@@ -67,3 +67,11 @@
     align-items: flex-start;
   }
 }
+
+.heading a {
+  text-decoration: none;
+}
+
+.heading a:hover {
+  text-decoration: underline;
+}

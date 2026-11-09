@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { EstateHills } from "@/components/EstateHills";
 import { RoomList, RoomListSkeleton } from "@/components/RoomList";
+import { SearchForm } from "@/components/SearchForm";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -15,6 +16,10 @@ export default function Home() {
           </p>
         </div>
         <EstateHills className={styles.hills} />
+      </section>
+
+      <section className={`page ${styles.search}`} aria-label="Check availability">
+        <SearchForm />
       </section>
 
       <section id="rooms" className={`page ${styles.section}`} aria-labelledby="rooms-title">

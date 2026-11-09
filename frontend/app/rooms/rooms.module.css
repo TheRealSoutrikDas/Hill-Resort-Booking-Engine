@@ -1,0 +1,282 @@
+.wrap {
+  padding-block: var(--space-5) calc(var(--space-6) + 3.5rem);
+}
+
+.searchBox {
+  margin-block: var(--space-4) var(--space-5);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.results {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.room {
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.roomHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.roomHead h2 {
+  margin: 0;
+  font-size: var(--step-2);
+}
+
+.roomHead a {
+  text-decoration: none;
+}
+
+.roomHead a:hover {
+  text-decoration: underline;
+}
+
+.left {
+  color: var(--leaf);
+  font-size: var(--step--1);
+}
+
+.soldOut {
+  color: var(--cherry-dark);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.description {
+  margin-block: var(--space-2) var(--space-3);
+}
+
+.plans {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.planNote {
+  display: block;
+  color: var(--leaf);
+  font-size: var(--step--1);
+  font-weight: 400;
+}
+
+.planPrice {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepper button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--canopy);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--canopy);
+  font: inherit;
+  font-size: var(--step-1);
+  cursor: pointer;
+}
+
+.stepper button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.guests {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.guests input {
+  width: 4rem;
+  min-height: 2.4rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid #9fb09c;
+  border-radius: var(--radius);
+  font: inherit;
+}
+
+.remove {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cherry-dark);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.summary {
+  align-self: start;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.summary h2 {
+  margin: 0;
+  font-size: var(--step-2);
+}
+
+.summary p {
+  margin: 0;
+}
+
+.stay {
+  font-weight: 600;
+}
+
+.chosen {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.warn {
+  color: var(--cherry-dark);
+  font-weight: 600;
+}
+
+.empty {
+  padding: var(--space-4);
+  background: var(--paper);
+  border-left: 4px solid var(--leaf);
+  border-radius: var(--radius);
+}
+
+@media (min-width: 48rem) {
+  .plan {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .plan .controls,
+  .plan > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+.phoneBar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--canopy);
+  color: var(--paper);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.phoneBarAction {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.summary {
+  scroll-margin-top: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .phoneBar {
+    display: none;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+
+  .summary {
+    position: sticky;
+    top: var(--space-4);
+  }
+}
+
+.promo {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--step--1);
+}
+
+.promo label {
+  font-weight: 600;
+}
+
+.promoRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.promoRow input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.4rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid #9fb09c;
+  border-radius: var(--radius);
+  font: inherit;
+  text-transform: uppercase;
+}
+
+.promoOk {
+  color: var(--leaf);
+  font-weight: 600;
+}
+
+.book {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.book .button {
+  width: 100%;
+  min-height: 2.8rem;
+}

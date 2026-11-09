@@ -28,3 +28,8 @@
 .section {
   padding-block: var(--space-5) 0;
 }
+
+.search {
+  margin-top: calc(-1 * var(--space-5));
+  position: relative;
+}
