@@ -20,6 +20,7 @@ export function AccountMenu() {
     return (
       <div className={styles.menu}>
         {me.role === "guest" && <Link href="/my-bookings">My bookings</Link>}
+        {me.role === "staff" && <Link href="/staff/inbox">Staff</Link>}
         {canAdmin(me) && <Link href="/admin/inventory">Admin</Link>}
         <span className={styles.name} title={me.email}>
           {firstName}
