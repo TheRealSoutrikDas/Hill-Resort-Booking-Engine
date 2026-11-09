@@ -71,8 +71,8 @@ async function Results({ searchParams }: Props) {
       {form}
       {open.length === 0 && (
         <p className={styles.empty}>
-          Everything is booked for these dates. Try other dates, or send us an enquiry and we will
-          see what we can do.
+          Everything is booked for these dates. Try other dates, or{" "}
+          <Link href="/enquire">send us an enquiry</Link> and we will see what we can do.
         </p>
       )}
       <RoomChooser search={dated} rooms={rooms} initialLines={parseLines(params)} />
