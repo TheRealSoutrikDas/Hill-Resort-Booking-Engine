@@ -61,7 +61,7 @@ started Postgres before this existed, reset it with `docker compose down -v`
 From `backend/`, with Postgres running and migrations applied:
 
 ```bash
-uvicorn app.main:create_app --factory --reload   # http://localhost:8000
+uvicorn app.main:create_app --factory --reload --timeout-keep-alive 65   # http://localhost:8000
 curl localhost:8000/health                        # {"status":"ok","database":"ok"}
 ```
 
@@ -124,7 +124,7 @@ CLASSIFIER_BACKEND=keyword python -m app.seed --reset --classify
 CLASSIFIER_BACKEND=keyword CORS_ORIGINS=http://localhost:3000 \
 RATE_LOGIN_PER_IP=10000 RATE_LOGIN_FAILURES_PER_EMAIL=10000 RATE_SIGNUP_PER_IP=10000 \
 RATE_LOOKUP_PER_IP=10000 RATE_ENQUIRY_PER_IP=10000 \
-SESSION_COOKIE_SECURE=false uvicorn app.main:create_app --factory
+SESSION_COOKIE_SECURE=false uvicorn app.main:create_app --factory --timeout-keep-alive 65
 ```
 
 Before any test runs, Playwright checks that the API is reachable through the frontend

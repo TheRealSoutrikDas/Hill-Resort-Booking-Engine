@@ -446,3 +446,11 @@ What was chosen, why, and what was rejected. Feeds the Technical Design Document
 - GM alerts list open alerts first with a link to each enquiry; only the GM can acknowledge. Metrics show counts and rates for a date range (last 30 days by default) and AI accuracy against the GM's approvals, with how many enquiries are still awaiting approval (A-192).
 - End-to-end tests send their own enquiries through the public API, so they never depend on each other or on the seeded ones. The backend for these tests runs with `CLASSIFIER_BACKEND=keyword`, so routing is deterministic and a `.env` that chooses Gemini cannot make the tests call it; the README command sets it, and reseeds with `--classify` so the demo inbox is classified.
 - No new dependency.
+
+## D-56 uvicorn's keep-alive timeout behind a proxy
+
+- Seen in a local end-to-end run: two tests failed when the Next.js proxy logged `read ECONNRESET` on requests to the backend. The proxy keeps connections to uvicorn open and reuses them; uvicorn closes an idle connection after 5 seconds by default. When the proxy reuses a connection at the moment uvicorn closes it, that request fails.
+- Reproduced by shortening uvicorn's idle timeout to 1 second and running the suite with 10 workers: 8 resets and failed tests. With `--timeout-keep-alive 65`, three runs under the same load had no resets.
+- Every documented start command (README, end-to-end command, `deployment.md`) now passes `--timeout-keep-alive 65`: longer than the proxy's idle time, and the usual figure behind load balancers, which keep connections for about 60 seconds.
+- Not explained: in one of those runs a cancellation test failed once without any reset. It did not happen again in a full run or on its own, so it is noted here rather than claimed fixed.
+- No code change and no new dependency.
