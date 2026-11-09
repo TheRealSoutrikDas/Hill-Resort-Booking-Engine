@@ -1,0 +1,23 @@
+flowchart TB
+  subgraph Browser
+    G([Guest]) 
+    S([Staff and GM])
+  end
+  subgraph FE["Frontend: Next.js (TypeScript)"]
+    P["Pages: server-rendered<br/>rooms, booking, inbox, admin"]
+    R["/api/* rewrite<br/>(same-site cookie)"]
+  end
+  subgraph BE["Backend: FastAPI (Python)"]
+    A["Routes<br/>auth, CSRF, rate limits"]
+    SV["Services<br/>availability, pricing, holds,<br/>bookings, enquiry pipeline"]
+    AD["Adapters<br/>mock payment gateway,<br/>Gemini classifier"]
+  end
+  DB[("PostgreSQL<br/>Alembic migrations")]
+  GEM["Google Gemini<br/>(message text only)"]
+  CSV["Daily CSV export<br/>to the reservation system"]
+  G --> P
+  S --> P
+  P --> R --> A --> SV --> DB
+  SV --> AD
+  AD -. "text only" .-> GEM
+  SV --> CSV

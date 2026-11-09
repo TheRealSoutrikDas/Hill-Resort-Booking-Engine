@@ -15,7 +15,6 @@ import evr3 from "@/public/images/rooms/EVR-3.jpg";
 import fst1 from "@/public/images/rooms/FST-1.jpg";
 import fst2 from "@/public/images/rooms/FST-2.jpg";
 import fst3 from "@/public/images/rooms/FST-3.jpg";
-import plv1 from "@/public/images/rooms/PLV-1.jpg";
 import plv2 from "@/public/images/rooms/PLV-2.jpg";
 import plv3 from "@/public/images/rooms/PLV-3.jpg";
 import ppv1 from "@/public/images/rooms/PPV-1.jpg";
@@ -32,7 +31,7 @@ export const HERO: Photo = { src: hero, alt: "Coffee plantation under shade tree
 export const ESTATE: Photo[] = [
   { src: rows, alt: "Rows of coffee plants on a hillside" },
   { src: cherries, alt: "Ripe coffee cherries on the branch" },
-  { src: cup, alt: "Coffee cherries, beans and a cup in a coffee field" },
+  { src: cup, alt: "A hand picking ripe coffee cherries from the branch" },
 ];
 
 // Decorative: the page beside them says everything.
@@ -54,14 +53,14 @@ const ROOM_PHOTOS: Record<string, Photo[]> = {
     { src: evr3, alt: "Green hillside with hills behind" },
   ],
   FST: [
-    { src: fst1, alt: "Sofa with cushions" },
+    { src: fst1, alt: "Cushioned seat on a balcony with plants" },
     { src: fst2, alt: "White bed and floor lamp in morning sun" },
     { src: fst3, alt: "Wooden bed frame with white linen" },
   ],
   PLV: [
-    { src: plv1, alt: "Wooden house on a grassy slope among trees" },
     { src: plv2, alt: "Wooden chairs and a table on a porch" },
-    { src: plv3, alt: "Wooden deck with a potted plant" },
+    { src: plv3, alt: "Wooden deck rail among leafy plants" },
+    { src: rows, alt: "Rows of coffee plants on a hillside" },
   ],
   PPV: [
     { src: ppv1, alt: "Pool in front of a villa among tropical plants" },
