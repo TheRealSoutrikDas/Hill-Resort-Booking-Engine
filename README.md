@@ -86,7 +86,10 @@ stdout and never contain personal data.
 
 ## Run the frontend
 
-From `frontend/`, with the API running on port 8000 (Node 22 or newer):
+From `frontend/`, with the API running on port 8000 (Node 22 or newer). The API must trust
+the frontend's address, or every log in, booking and enquiry from the browser is refused
+with "Request from an unexpected origin.": put `CORS_ORIGINS=http://localhost:3000` in
+`.env`.
 
 ```bash
 npm ci
@@ -117,10 +120,14 @@ frontend server):
 ```bash
 cd backend
 python -m app.seed --reset
+CORS_ORIGINS=http://localhost:3000 \
 RATE_LOGIN_PER_IP=10000 RATE_LOGIN_FAILURES_PER_EMAIL=10000 RATE_SIGNUP_PER_IP=10000 \
 RATE_LOOKUP_PER_IP=10000 RATE_ENQUIRY_PER_IP=10000 \
 SESSION_COOKIE_SECURE=false uvicorn app.main:create_app --factory
 ```
+
+Before any test runs, Playwright checks that the API is reachable through the frontend
+and trusts its origin, and stops with one clear message if not.
 
 The TypeScript types for the API come from the backend's OpenAPI schema. After an API
 change (a backend test fails until you do this):
