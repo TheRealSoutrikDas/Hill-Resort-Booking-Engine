@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { EstateHills } from "@/components/EstateHills";
 import { RoomList, RoomListSkeleton } from "@/components/RoomList";
@@ -33,6 +34,10 @@ export default function Home() {
       <section id="visit" className={`page ${styles.section}`} aria-labelledby="visit-title">
         <h2 id="visit-title">Visit</h2>
         <p>CompanyA, Chikkamagaluru, Karnataka, India.</p>
+        <p>
+          Planning a wedding, a company offsite or a group stay, or have a question?{" "}
+          <Link href="/enquire">Send us an enquiry</Link> and our team will reply.
+        </p>
       </section>
     </>
   );

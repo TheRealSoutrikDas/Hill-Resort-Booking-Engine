@@ -17,7 +17,7 @@ export function SiteHeader() {
               <Link href="/rooms">Rooms and villas</Link>
             </li>
             <li>
-              <Link href="/#visit">Visit</Link>
+              <Link href="/enquire">Enquire</Link>
             </li>
           </ul>
           <Suspense fallback={<span style={{ display: "inline-block", width: "4.5rem" }} />}>
