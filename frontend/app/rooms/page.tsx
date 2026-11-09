@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { ApiError } from "@/lib/errors";
 import { guestsLabel } from "@/lib/format";
+import { roomPhotos } from "@/lib/photos";
 import { serverGet } from "@/lib/server-api";
 import { parseLines, parseSearch, searchQuery, type Search } from "@/lib/stay";
 import type { RoomDetail, RoomSearch } from "@/lib/types";
@@ -89,17 +91,27 @@ async function AllRooms({ search }: { search: Search }) {
   }
   return (
     <ul className={styles.results}>
-      {data.rooms.map((room) => (
-        <li key={room.code} className={styles.room}>
-          <div className={styles.roomHead}>
-            <h2>
-              <Link href={`/rooms/${room.code}?${searchQuery(search)}`}>{room.name}</Link>
-            </h2>
-            <span className={styles.left}>For up to {guestsLabel(room.max_guests)}</span>
-          </div>
-          <p className={styles.description}>{room.description}</p>
-        </li>
-      ))}
+      {data.rooms.map((room) => {
+        const photo = roomPhotos(room.code)[0];
+        return (
+          <li key={room.code} className={styles.room}>
+            {photo && (
+              <div className={styles.thumb}>
+                <Image src={photo.src} alt={photo.alt} fill placeholder="blur" sizes="(min-width: 48rem) 12rem, 100vw" />
+              </div>
+            )}
+            <div className={styles.roomBody}>
+              <div className={styles.roomHead}>
+                <h2>
+                  <Link href={`/rooms/${room.code}?${searchQuery(search)}`}>{room.name}</Link>
+                </h2>
+                <span className={styles.left}>For up to {guestsLabel(room.max_guests)}</span>
+              </div>
+              <p className={styles.description}>{room.description}</p>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

@@ -1,39 +1,40 @@
-// The one bold element on the page: terraced hills with rows of coffee and a band of
-// mist, drawn as an SVG (no photos are invented, A-157). Decorative only.
+// Terraced hills with rows of coffee, drawn over the bottom of the hero photo so the
+// photo settles into the page like mist into a valley (D-57). Decorative only.
+// The front ridge is the page colour (--mist), so the photo ends in the hills' outline.
 export function EstateHills({ className }: { className?: string }) {
-  const rows = Array.from({ length: 7 }, (_, i) => i);
+  const rows = Array.from({ length: 6 }, (_, i) => i);
   return (
     <svg
       className={className}
-      viewBox="0 50 1200 270"
+      viewBox="0 120 1200 200"
       preserveAspectRatio="xMidYMax slice"
       aria-hidden="true"
       focusable="false"
     >
-      <path d="M0 150 C 180 70, 330 60, 520 120 S 860 40, 1200 110 L1200 320 L0 320 Z" fill="#b9c8b6" />
-      <path d="M0 200 C 220 130, 420 150, 640 190 S 980 120, 1200 170 L1200 320 L0 320 Z" fill="#7f9a7c" />
-      <defs>
-        <linearGradient id="estate-mist" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#eef1ec" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#eef1ec" stopOpacity="0.75" />
-          <stop offset="1" stopColor="#eef1ec" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect x="0" y="150" width="1200" height="70" fill="url(#estate-mist)" />
-      <path d="M0 250 C 260 190, 520 210, 760 240 S 1060 200, 1200 225 L1200 320 L0 320 Z" fill="#3f5e45" />
+      <path
+        d="M0 190 C 220 130, 420 150, 640 185 S 980 120, 1200 165 L1200 320 L0 320 Z"
+        fill="#eef1ec"
+        fillOpacity="0.35"
+      />
+      <path
+        d="M0 235 C 260 180, 520 200, 760 228 S 1060 190, 1200 212 L1200 320 L0 320 Z"
+        fill="#eef1ec"
+        fillOpacity="0.6"
+      />
+      <path d="M0 268 C 300 228, 560 246, 800 266 S 1080 236, 1200 254 L1200 320 L0 320 Z" fill="#eef1ec" />
       {rows.map((i) => (
         <path
           key={i}
-          d={`M0 ${262 + i * 9} C 300 ${212 + i * 9}, 560 ${232 + i * 9}, 800 ${258 + i * 9} S 1080 ${222 + i * 9}, 1200 ${246 + i * 9}`}
+          d={`M0 ${284 + i * 7} C 300 ${244 + i * 7}, 560 ${262 + i * 7}, 800 ${282 + i * 7} S 1080 ${252 + i * 7}, 1200 ${270 + i * 7}`}
           fill="none"
-          stroke="#2a4a33"
+          stroke="#cfd8cd"
           strokeWidth="3"
           strokeDasharray="2 14"
           strokeLinecap="round"
         />
       ))}
-      <circle cx="914" cy="246" r="3.5" fill="#b3262e" />
-      <circle cx="922" cy="249" r="3" fill="#b3262e" />
+      <circle cx="914" cy="272" r="3.5" fill="#b3262e" />
+      <circle cx="922" cy="275" r="3" fill="#b3262e" />
     </svg>
   );
 }

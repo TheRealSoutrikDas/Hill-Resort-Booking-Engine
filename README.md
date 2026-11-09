@@ -96,6 +96,10 @@ npm ci
 npm run dev            # http://localhost:3000, /api/* is forwarded to localhost:8000
 ```
 
+The sample photos are committed in `public/images/`. If any are missing, the build stops
+with a "Module not found" error naming the file; `bash scripts/fetch-photos.sh` downloads
+them again (sources and licences in `docs/PHOTO_SOURCES.md`).
+
 The browser only talks to the frontend's own address; Next.js forwards `/api/*` to the
 backend, so session cookies stay on one site. For a production build, `API_URL` is
 required at build and start (the build fails without it):

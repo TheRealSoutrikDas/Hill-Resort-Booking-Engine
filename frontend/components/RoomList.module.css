@@ -1,36 +1,54 @@
+/* Rooms and villas as alternating rows: an arched photo, like an estate-house window,
+   beside the words. The arch is kept for room photos only. */
 .list {
-  margin: 0;
+  display: grid;
+  gap: var(--space-5);
+  margin: var(--space-4) 0 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--line);
 }
 
 .item {
   display: grid;
-  gap: var(--space-2);
-  padding-block: var(--space-4);
-  border-bottom: 1px solid var(--line);
+  gap: var(--space-3);
 }
 
-.heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-1) var(--space-4);
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--arch);
+  background: var(--line);
 }
 
-.heading h3 {
-  margin: 0;
+.photo img {
+  object-fit: cover;
+}
+
+.text h3 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--step-3);
+}
+
+.text a {
+  text-decoration: none;
+}
+
+.text a:hover {
+  text-decoration: underline;
 }
 
 .meta {
+  margin: 0 0 var(--space-2);
   color: var(--leaf);
   font-size: var(--step--1);
 }
 
 .description {
   margin: 0;
+  max-width: 40ch;
+  font-size: var(--step-1);
+  line-height: 1.45;
 }
 
 .problem {
@@ -56,22 +74,25 @@
 }
 
 @media (min-width: 48rem) {
+  .list {
+    gap: var(--space-6);
+  }
+
   .item {
-    grid-template-columns: minmax(14rem, 1fr) 2fr;
-    align-items: baseline;
-    gap: var(--space-4);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-5);
   }
 
-  .heading {
-    flex-direction: column;
-    align-items: flex-start;
+  .item:nth-child(even) .photo {
+    order: 2;
   }
-}
 
-.heading a {
-  text-decoration: none;
-}
+  .photo {
+    aspect-ratio: 3 / 2;
+  }
 
-.heading a:hover {
-  text-decoration: underline;
+  .skeleton {
+    grid-template-columns: 1fr;
+  }
 }

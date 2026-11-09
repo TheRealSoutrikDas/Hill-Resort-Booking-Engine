@@ -1,0 +1,39 @@
+.split {
+  display: grid;
+  gap: var(--space-5);
+  padding-block: var(--space-5) var(--space-6);
+}
+
+.content {
+  min-width: 0;
+}
+
+.content h1 {
+  font-size: var(--step-4);
+}
+
+.panel {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+
+  .panel {
+    position: sticky;
+    top: var(--space-4);
+    display: block;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: var(--arch);
+    background: var(--line);
+  }
+
+  .panel img {
+    object-fit: cover;
+  }
+}

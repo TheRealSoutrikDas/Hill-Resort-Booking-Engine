@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PriceBreakdown } from "@/components/PriceBreakdown";
 import { api } from "@/lib/api";
 import { ApiError } from "@/lib/errors";
 import { formatInr, guestsLabel } from "@/lib/format";
+import { roomPhotos } from "@/lib/photos";
 import { MAX_ROOMS, searchQuery, stayLabel, type Line, type Search } from "@/lib/stay";
 import type { PriceOut, RoomDetail } from "@/lib/types";
 import { BookButton } from "./BookButton";
@@ -115,65 +117,73 @@ export function RoomChooser({ search, rooms, initialLines }: Props) {
           const room = detail.room;
           const left = room.available_units ?? 0;
           const chosenOfType = roomsOfType(room.code);
+          const photo = roomPhotos(room.code)[0];
           return (
             <li key={room.code} className={styles.room}>
-              <div className={styles.roomHead}>
-                <h2>
-                  <Link href={`/rooms/${room.code}?${searchQuery(search)}`}>{room.name}</Link>
-                </h2>
-                <span className={left === 0 ? styles.soldOut : styles.left}>
-                  {left === 0 ? "Sold out for these dates" : `${left} left for these dates`}
-                </span>
-              </div>
-              <p className={styles.description}>
-                {room.description} For up to {guestsLabel(room.max_guests)}.
-              </p>
-              {left > 0 && (
-                <ul className={styles.plans}>
-                  {(detail.quotes ?? []).map((q) => {
-                    const line = lineFor(room.code, q.rate_plan.code);
-                    const canAddRoom = totalRooms < MAX_ROOMS && chosenOfType < left;
-                    return (
-                      <li key={q.rate_plan.code} className={styles.plan}>
-                        <div>
-                          <strong>{q.rate_plan.name}</strong>
-                          <span className={styles.planNote}>{q.rate_plan.description}</span>
-                        </div>
-                        {q.price ? (
-                          <span className={styles.planPrice}>
-                            {formatInr(q.price.total_paise)}
-                            <span className={styles.planNote}>
-                              1 room, {guestsLabel(q.price.lines[0]?.guests ?? 1)}, GST included
-                            </span>
-                          </span>
-                        ) : (
-                          <span className={styles.planNote}>Not on sale for these dates</span>
-                        )}
-                        {q.price &&
-                          (line ? (
-                            <LineControls
-                              line={line}
-                              maxGuestsPerRoom={room.max_guests}
-                              canAddRoom={canAddRoom}
-                              roomName={room.name}
-                              onChange={(next) => update(room.code, q.rate_plan.code, () => next)}
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              className="button-quiet"
-                              disabled={!canAddRoom}
-                              onClick={() => add(detail, q.rate_plan.code)}
-                              aria-label={`Add ${room.name}, ${q.rate_plan.name}`}
-                            >
-                              Add
-                            </button>
-                          ))}
-                      </li>
-                    );
-                  })}
-                </ul>
+              {photo && (
+                <div className={styles.thumb}>
+                  <Image src={photo.src} alt={photo.alt} fill placeholder="blur" sizes="(min-width: 48rem) 12rem, 100vw" />
+                </div>
               )}
+              <div className={styles.roomBody}>
+                <div className={styles.roomHead}>
+                  <h2>
+                    <Link href={`/rooms/${room.code}?${searchQuery(search)}`}>{room.name}</Link>
+                  </h2>
+                  <span className={left === 0 ? styles.soldOut : styles.left}>
+                    {left === 0 ? "Sold out for these dates" : `${left} left for these dates`}
+                  </span>
+                </div>
+                <p className={styles.description}>
+                  {room.description} For up to {guestsLabel(room.max_guests)}.
+                </p>
+                {left > 0 && (
+                  <ul className={styles.plans}>
+                    {(detail.quotes ?? []).map((q) => {
+                      const line = lineFor(room.code, q.rate_plan.code);
+                      const canAddRoom = totalRooms < MAX_ROOMS && chosenOfType < left;
+                      return (
+                        <li key={q.rate_plan.code} className={styles.plan}>
+                          <div>
+                            <strong>{q.rate_plan.name}</strong>
+                            <span className={styles.planNote}>{q.rate_plan.description}</span>
+                          </div>
+                          {q.price ? (
+                            <span className={styles.planPrice}>
+                              {formatInr(q.price.total_paise)}
+                              <span className={styles.planNote}>
+                                1 room, {guestsLabel(q.price.lines[0]?.guests ?? 1)}, GST included
+                              </span>
+                            </span>
+                          ) : (
+                            <span className={styles.planNote}>Not on sale for these dates</span>
+                          )}
+                          {q.price &&
+                            (line ? (
+                              <LineControls
+                                line={line}
+                                maxGuestsPerRoom={room.max_guests}
+                                canAddRoom={canAddRoom}
+                                roomName={room.name}
+                                onChange={(next) => update(room.code, q.rate_plan.code, () => next)}
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                className="button-quiet"
+                                disabled={!canAddRoom}
+                                onClick={() => add(detail, q.rate_plan.code)}
+                                aria-label={`Add ${room.name}, ${q.rate_plan.name}`}
+                              >
+                                Add
+                              </button>
+                            ))}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             </li>
           );
         })}
