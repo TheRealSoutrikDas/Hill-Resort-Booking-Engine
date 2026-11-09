@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ApiError } from "@/lib/errors";
 import { guestsLabel } from "@/lib/format";
 import { serverGet } from "@/lib/server-api";
@@ -30,7 +31,9 @@ export async function RoomList() {
       {data.rooms.map((room) => (
         <li key={room.code} className={styles.item}>
           <div className={styles.heading}>
-            <h3>{room.name}</h3>
+            <h3>
+              <Link href={`/rooms/${room.code}`}>{room.name}</Link>
+            </h3>
             <span className={styles.meta}>
               {KIND_LABEL[room.kind] ?? room.kind}, for up to {guestsLabel(room.max_guests)}
             </span>

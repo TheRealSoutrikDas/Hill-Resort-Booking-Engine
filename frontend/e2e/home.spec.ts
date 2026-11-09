@@ -4,10 +4,11 @@ test("home page shows the resort and its rooms from the API", async ({ page }) =
   await page.goto("/");
   await expect(page).toHaveTitle(/CompanyA/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Chikkamagaluru");
-  const rooms = page.locator("#rooms li");
+  // Streamed content can briefly exist twice (a hidden copy before it is swapped in).
+  const rooms = page.locator("#rooms li").filter({ visible: true });
   await expect(rooms).toHaveCount(5);
-  await expect(page.getByRole("heading", { name: "Pool Villa" })).toBeVisible();
-  await expect(page.getByText("Villa, for up to 6 guests")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pool Villa" }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText("Villa, for up to 6 guests").filter({ visible: true })).toBeVisible();
 });
 
 test("the API is reached through this site, not directly", async ({ page }) => {
